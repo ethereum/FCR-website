@@ -8,6 +8,8 @@
   --color-surface: #ffffff;
   --color-text: #000000;
   --color-text-muted: #6a6a6a;
+  --color-green: #22c55e;
+  --color-red: #ef4444;
 
   /* Typography */
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -86,4 +88,147 @@ details[open] summary .faq-icon {
 /* Smaller nav font when sticky */
 #header-nav.sticky .nav-link {
   font-size: 12px;
+}
+
+/* Simulation styles */
+.sim-tab {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.sim-tab:hover {
+  color: var(--color-text);
+}
+
+.sim-tab.active {
+  background: var(--color-primary);
+  color: var(--color-background);
+  border-color: var(--color-primary);
+}
+
+.sim-block {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  font-weight: 700;
+  transition: all 0.4s ease;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.sim-block.proposed {
+  background: #d1d5db;
+  color: #6b7280;
+}
+
+.sim-block.confirmed {
+  background: var(--color-primary);
+  color: white;
+}
+
+.sim-block.finalized {
+  background: var(--color-green);
+  color: white;
+}
+
+.sim-block.stale {
+  background: transparent;
+  border: 2px dashed #d1d5db;
+  color: #9ca3af;
+}
+
+.sim-pointer {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: all 0.4s ease;
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.sim-pointer.confirmed-ptr {
+  background: var(--color-primary);
+  color: white;
+}
+
+.sim-pointer.finalized-ptr {
+  background: var(--color-green);
+  color: white;
+}
+
+.sim-vote-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: background 0.3s ease;
+}
+
+.sim-vote-dot.honest {
+  background: var(--color-green);
+}
+
+.sim-vote-dot.adversary {
+  background: var(--color-red);
+}
+
+.sim-vote-dot.pending {
+  background: #d1d5db;
+}
+
+.sim-callout {
+  background: var(--color-primary);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.sim-callout.visible {
+  opacity: 1;
+}
+
+.sim-progress {
+  height: 4px;
+  background: var(--color-text-muted);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sim-progress-bar {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+@media (max-width: 768px) {
+  .sim-block {
+    width: 36px;
+    height: 36px;
+    font-size: 0.5rem;
+  }
 }

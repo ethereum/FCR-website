@@ -1,11 +1,12 @@
 import './style.css'
+import { BlockSimulation } from './simulation.js'
 
-// Animate hero number from 0 to 13
+// Animate hero number from 0 to 1
 function animateNumber() {
   const element = document.getElementById('hero-number')
   if (!element) return
 
-  const target = 13
+  const target = 1
   const duration = 1500
   const start = performance.now()
 
@@ -100,9 +101,30 @@ function handleScrollSpy() {
   sections.forEach((section) => observer.observe(section))
 }
 
+// Lazy-init simulation when it scrolls into view
+function initSimulation() {
+  const container = document.getElementById('sim-container')
+  if (!container) return
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          new BlockSimulation(container)
+          observer.disconnect()
+        }
+      })
+    },
+    { rootMargin: '200px' }
+  )
+
+  observer.observe(container)
+}
+
 // Run on load
 document.addEventListener('DOMContentLoaded', () => {
   animateNumber()
   handleStickyHeader()
   handleScrollSpy()
+  initSimulation()
 })
