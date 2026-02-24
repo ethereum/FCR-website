@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FCR - Fast Confirmation Rule for Ethereum</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body class="bg-primary min-h-screen flex items-center justify-center p-4 md:p-8 lg:p-16">
+    <div class="bg-background rounded-2xl md:rounded-[50px] w-full max-w-[1400px] px-6 py-8 md:px-12 md:py-12 lg:px-16 lg:py-16 space-y-24 md:space-y-32 lg:space-y-40 relative">
+
+      <!-- Header -->
+      <header id="header" class="sticky top-0 z-50 -mx-6 md:-mx-12 lg:-mx-16 -mt-8 md:-mt-12 lg:-mt-16 bg-primary pt-2 transition-all duration-300">
+        <div class="flex items-center justify-between bg-background px-6 md:px-12 lg:px-16 py-4 rounded-t-2xl md:rounded-t-[30px] border-b-2 border-transparent transition-all duration-300" id="header-inner">
+          <div class="flex flex-col">
+            <span class="text-primary text-3xl md:text-4xl font-bold tracking-tight">FCR</span>
+            <span id="header-subtitle" class="text-primary text-xs md:text-sm font-medium transition-all duration-300">Fast Confirmation Rule</span>
+          </div>
+          <nav id="header-nav" class="hidden lg:flex items-center gap-10 transition-all duration-300">
+            <a href="#overview" class="nav-link text-sm font-medium tracking-wide">OVERVIEW</a>
+            <a href="#risk" class="nav-link text-sm font-medium tracking-wide">TRADE-OFFS</a>
+            <a href="#use-cases" class="nav-link text-sm font-medium tracking-wide">USE CASES</a>
+            <a href="#implement" class="nav-link text-sm font-medium tracking-wide">IMPLEMENT</a>
+            <a href="#faq" class="nav-link text-sm font-medium tracking-wide">FAQ</a>
+          </nav>
+          <a href="#implement" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-full hover:bg-primary-dark transition-colors">
+            Get Started
+          </a>
+        </div>
+      </header>
+
+      <!-- Hero Section -->
+      <section id="overview" class="space-y-8">
+        <h1 class="text-primary font-black leading-none tracking-tighter text-center">
+          <span id="hero-number" class="text-[160px] md:text-[280px] lg:text-[380px]">0</span><span class="text-[80px] md:text-[140px] lg:text-[180px]">s</span>
+        </h1>
+
+        <!-- Stats Bar -->
+        <div class="flex justify-center">
+          <div class="bg-primary rounded-full px-4 md:px-8 py-2 md:py-3 inline-flex items-center divide-x divide-background/30">
+            <div class="text-center px-4 md:px-6">
+              <div class="text-background text-base md:text-xl font-bold">98.75%</div>
+              <div class="text-background text-[8px] md:text-[10px] opacity-70 uppercase tracking-wider">Speed Improvement</div>
+            </div>
+            <div class="text-center px-4 md:px-6">
+              <div class="text-background text-base md:text-xl font-bold">~12-13s</div>
+              <div class="text-background text-[8px] md:text-[10px] opacity-70 uppercase tracking-wider">Confirmation Time</div>
+            </div>
+            <div class="text-center px-4 md:px-6">
+              <div class="text-background text-base md:text-xl font-bold">0</div>
+              <div class="text-background text-[8px] md:text-[10px] opacity-70 uppercase tracking-wider">Hard Forks Required</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Headline -->
+        <div class="text-center space-y-6">
+          <h2 class="text-primary text-3xl md:text-5xl lg:text-6xl font-extrabold leading-tight max-w-4xl mx-auto">
+            Confirmation in 13 seconds.<br>
+            Single slot confirmation for Ethereum.
+          </h2>
+          <div class="flex justify-center gap-4 md:gap-7">
+            <a href="#implement" class="bg-primary text-background text-sm md:text-base font-medium px-6 md:px-8 py-3 md:py-4 rounded-full hover:bg-primary-dark transition-colors">
+              Get Started
+            </a>
+            <a href="#use-cases" class="border-2 border-primary text-primary text-sm md:text-base font-medium px-6 md:px-8 py-3 md:py-4 rounded-full hover:bg-primary hover:text-background transition-colors">
+              Use Cases
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Feature Intro -->
+      <section class="space-y-8">
+        <div class="flex flex-col lg:flex-row gap-8 lg:gap-16">
+          <h3 class="text-primary text-2xl md:text-3xl lg:text-4xl font-extrabold leading-tight lg:w-1/4 lg:shrink-0">
+            Fast and Secure confirmations for users.
+          </h3>
+          <div class="lg:flex-1 grid md:grid-cols-3 gap-6 lg:gap-8">
+            <p class="text-text-muted text-sm md:text-base leading-relaxed">
+              <span class="text-primary font-semibold">FCR reduces L1 to L2 or L1 to exchange deposit and message speed to about 13 seconds.</span> That is 98.75% faster than finality.
+            </p>
+            <p class="text-text-muted text-sm md:text-base leading-relaxed">
+              <span class="text-primary font-semibold">FCR relies on counting attestations</span> and is proven to be safe under normal network conditions. Waiting for a number of blocks is not.
+            </p>
+            <p class="text-text-muted text-sm md:text-base leading-relaxed">
+              <span class="text-primary font-semibold">Security first.</span> If confidence drops below threshold, FCR automatically falls back to finality.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Trade-offs Section -->
+      <section id="risk" class="space-y-8">
+        <h3 class="text-primary text-3xl md:text-4xl lg:text-5xl font-extrabold">Trade-offs</h3>
+        <p class="text-text-muted text-sm md:text-base max-w-3xl">
+          FCR optimizes for speed; finality optimizes for extreme robustness.
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-6 md:gap-8">
+          <!-- FCR Column -->
+          <div class="rounded-3xl p-6 md:p-8 space-y-6 border-2 border-primary/40">
+            <h4 class="text-text text-xl md:text-2xl font-bold">Fast Confirmation Rule - FCR</h4>
+
+            <div class="space-y-5">
+              <div>
+                <div class="text-primary font-bold text-xl md:text-2xl">Speed</div>
+                <div class="text-text-muted text-sm">~12-13 seconds</div>
+              </div>
+              <div>
+                <div class="text-primary font-bold text-xl md:text-2xl">Synchronous security</div>
+                <div class="text-text-muted text-sm">Relies on network synchrony and a 25% adversarial threshold</div>
+              </div>
+              <div>
+                <div class="text-primary font-bold text-xl md:text-2xl">High confidence guarantee</div>
+                <div class="text-text-muted text-sm">Determines a block is effectively permanent based on real-time attestation weight</div>
+              </div>
+              <div>
+                <div class="text-primary font-bold text-xl md:text-2xl">Reliable speed</div>
+                <div class="text-text-muted text-sm">Best suited for L2 native and external bridges and exchange deposits.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FFG Column -->
+          <div class="rounded-3xl p-6 md:p-8 space-y-6 border-2 border-primary/40">
+            <h4 class="text-text text-xl md:text-2xl font-bold">Full Finality - Casper FFG</h4>
+
+            <div class="space-y-5">
+              <div>
+                <div class="text-primary font-bold text-xl md:text-2xl">Speed</div>
+                <div class="text-text-muted text-sm">~12-16 minutes (2 epochs)</div>
+              </div>
+              <div>
+                <div class="text-primary font-bold text-xl md:text-2xl">Asynchronous security</div>
+                <div class="text-text-muted text-sm">Works under asynchronous conditions with a 33% adversarial threshold</div>
+              </div>
+              <div>
+                <div class="text-primary font-bold text-xl md:text-2xl">Absolute permanence guarantee</div>
+                <div class="text-text-muted text-sm">Economic security provided by the threat of slashing validators who violate protocol rules</div>
+              </div>
+              <div>
+                <div class="text-primary font-bold text-xl md:text-2xl">True immutability</div>
+                <div class="text-text-muted text-sm">Finality for high-value institutional settlement, large bridges, and cold wallet rebalancing</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Use Cases Section -->
+      <section id="use-cases" class="space-y-8">
+        <h3 class="text-primary text-3xl md:text-4xl lg:text-5xl font-extrabold">Use cases</h3>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- Exchanges -->
+          <div class="rounded-3xl p-6 md:p-8 space-y-4 border-2 border-primary/40">
+            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-text-muted/30 flex items-center justify-center">
+              <span class="text-primary text-xs">icons???</span>
+            </div>
+            <h4 class="text-primary text-xl md:text-2xl font-bold">Exchanges</h4>
+            <ul class="text-text-muted text-sm space-y-4">
+              <li class="flex items-start gap-3">
+                <span class="text-text mt-0.5">■</span>
+                <span>Don't leave your users worrying. Credit deposits within seconds.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-text mt-0.5">■</span>
+                <span>Deepen order book liquidity. Minimize time assets are idle while waiting to be confirmed.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Cross-Chain Bridges -->
+          <div class="rounded-3xl p-6 md:p-8 space-y-4 border-2 border-primary/40">
+            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-text-muted/30 flex items-center justify-center">
+              <span class="text-primary text-xs">icons???</span>
+            </div>
+            <h4 class="text-primary text-xl md:text-2xl font-bold">Cross-Chain Bridges</h4>
+            <ul class="text-text-muted text-sm space-y-4">
+              <li class="flex items-start gap-3">
+                <span class="text-text mt-0.5">■</span>
+                <span>Reduce costs. Under normal network conditions, reorgs are no concern with FCR.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- L2s -->
+          <div class="rounded-3xl p-6 md:p-8 space-y-4 border-2 border-primary/40">
+            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-text-muted/30 flex items-center justify-center">
+              <span class="text-primary text-xs">icons???</span>
+            </div>
+            <h4 class="text-primary text-xl md:text-2xl font-bold">L2s</h4>
+            <ul class="text-text-muted text-sm space-y-4">
+              <li class="flex items-start gap-3">
+                <span class="text-text mt-0.5">■</span>
+                <span>Don't let your users wait! Confirm deposits from the L1 within seconds</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-text mt-0.5">■</span>
+                <span>Tap into Ethereum's liquidity within seconds</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-text mt-0.5">■</span>
+                <span>Automatically fall back to a safe head block if there are too few attestations</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- RPC & Infrastructure Providers -->
+          <div class="rounded-3xl p-6 md:p-8 space-y-4 border-2 border-primary/40">
+            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-text-muted/30 flex items-center justify-center">
+              <span class="text-primary text-xs">icons???</span>
+            </div>
+            <h4 class="text-primary text-xl md:text-2xl font-bold">RPC & Infrastructure Providers</h4>
+            <ul class="text-text-muted text-sm space-y-4">
+              <li class="flex items-start gap-3">
+                <span class="text-text mt-0.5">■</span>
+                <span>Differentiate your API suite. Provide 'Fast Confirmation' endpoints that let developers bypass the 12 minute wait for finality.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-text mt-0.5">■</span>
+                <span>Empower builders with the fastest reliable signals. Serve 'confirmed' states to apps in as little as 12 seconds, reducing UI latency downstream.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-text mt-0.5">■</span>
+                <span>Standardize transaction confidence. Replace fragmented custom estimations with a unified, protocol-aligned confirmation signal for your users.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Implementation Steps -->
+      <section id="implement" class="space-y-12">
+        <h3 class="text-primary text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight">
+          High value.<br>
+          Low lift.
+        </h3>
+        <p class="text-text-muted text-base md:text-lg max-w-xl">
+          Enable a faster flag on your consensus client. Integrate with the new Beacon API endpoint.
+        </p>
+
+        <div class="space-y-6">
+          <!-- Step 1 -->
+          <div class="border-2 border-primary/40 rounded-3xl p-6 md:p-8">
+            <div class="grid lg:grid-cols-2 gap-6 items-center">
+              <div class="space-y-4">
+                <div class="text-primary text-sm font-medium tracking-wider">STEP 01</div>
+                <h4 class="text-primary text-2xl md:text-3xl font-bold">Enable the flag</h4>
+                <p class="text-text-muted text-sm md:text-base">Add the flag to your consensus client startup command.</p>
+              </div>
+              <div class="bg-text rounded-sm p-5 md:p-6 space-y-3">
+                <div class="text-background/60 text-xs uppercase tracking-wider">Consensus Client</div>
+                <code class="code-block text-background text-sm md:text-base block">lighthouse bn --fast-confirmation-rule</code>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="border-2 border-primary/40 rounded-3xl p-6 md:p-8">
+            <div class="grid lg:grid-cols-2 gap-6 items-center">
+              <div class="space-y-4">
+                <div class="text-primary text-sm font-medium tracking-wider">STEP 02</div>
+                <h4 class="text-primary text-2xl md:text-3xl font-bold">Query status</h4>
+                <p class="text-text-muted text-sm md:text-base">Poll the new Beacon API endpoint for confirmation status.</p>
+              </div>
+              <div class="bg-text rounded-sm p-5 md:p-6 space-y-3">
+                <div class="text-background/60 text-xs uppercase tracking-wider">Beacon API</div>
+                <code class="code-block text-background text-sm md:text-base block">GET /eth/v1/beacon/fast_confirmation/{root}</code>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="border-2 border-primary/40 rounded-3xl p-6 md:p-8">
+            <div class="grid lg:grid-cols-2 gap-6 items-center">
+              <div class="space-y-4">
+                <div class="text-primary text-sm font-medium tracking-wider">STEP 03</div>
+                <h4 class="text-primary text-2xl md:text-3xl font-bold">Verify</h4>
+                <p class="text-text-muted text-sm md:text-base">Modify your confirmation logic to use FCR.</p>
+              </div>
+              <div class="bg-text rounded-sm p-5 md:p-6 space-y-3">
+                <div class="text-background/60 text-xs uppercase tracking-wider">Response</div>
+                <code class="code-block text-background text-sm md:text-base block">{ "status": "confirmed" }</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ Section -->
+      <section id="faq" class="space-y-8">
+        <div class="flex flex-col lg:flex-row gap-8 lg:gap-16">
+          <div class="lg:w-1/3">
+            <h3 class="text-primary text-3xl md:text-4xl font-bold">Frequently asked</h3>
+            <p class="text-text-muted text-sm md:text-base mt-4 hidden lg:block">
+              The Fast Confirmation Rule provides secure confirmations within 13 seconds. Although the exact algorithm is complex, the core idea relies on counting attestations. Using FCR is very easy! Feel free to get in touch by emailing fastconfirm@ethereum.org
+            </p>
+          </div>
+
+          <div class="lg:w-2/3 space-y-3">
+            <details class="group border-b border-text-muted/20 pb-3">
+              <summary class="flex items-center justify-between py-2 cursor-pointer">
+                <span class="text-text font-medium text-sm md:text-base">What is the Fast Confirmation Rule (FCR)?</span>
+                <span class="faq-icon text-primary text-xl font-light">+</span>
+              </summary>
+              <div class="pt-2 text-text-muted text-sm leading-relaxed">
+                FCR is an algorithm that provides near-instant transaction confirmations by analyzing validator attestation voting power in real-time. It determines that a block is secure based on deterministic logic, not probability; based on the weight of LMD-GHOST support it has gathered from the validator committee, if a transaction is fast confirmed, it is guaranteed to be finalized provided that standard network synchrony and adversarial threshold assumptions hold. Effectively, a fast-confirmed transaction will be finalized unless the network experiences exceptional circumstances.
+              </div>
+            </details>
+
+            <details class="group border-b border-text-muted/20 pb-3">
+              <summary class="flex items-center justify-between py-2 cursor-pointer">
+                <span class="text-text font-medium text-sm md:text-base">Is a hard fork required to implement FCR?</span>
+                <span class="faq-icon text-primary text-xl font-light">+</span>
+              </summary>
+              <div class="pt-2 text-text-muted text-sm leading-relaxed">
+                No. FCR is an out-of-protocol, opt-in upgrade for consensus clients. It requires no changes to the base Ethereum consensus layer, no hard fork, and no network-wide coordination; node operators can operate it independently.
+              </div>
+            </details>
+
+            <details class="group border-b border-text-muted/20 pb-3">
+              <summary class="flex items-center justify-between py-2 cursor-pointer">
+                <span class="text-text font-medium text-sm md:text-base">Is FCR as secure as finality?</span>
+                <span class="faq-icon text-primary text-xl font-light">+</span>
+              </summary>
+              <div class="pt-2 text-text-muted text-sm leading-relaxed">
+                FCR operates on a different security assumption than Casper FFG finality. While finality requires a 33% adversarial threshold and works under partial network synchrony, FCR assumes a 25% adversarial threshold and requires network synchrony. It is a complementary tool meant for speed, while FFG finalization remains the ultimate economic security guarantee.
+              </div>
+            </details>
+
+            <details class="group border-b border-text-muted/20 pb-3">
+              <summary class="flex items-center justify-between py-2 cursor-pointer">
+                <span class="text-text font-medium text-sm md:text-base">What happens if network conditions are poor?</span>
+                <span class="faq-icon text-primary text-xl font-light">+</span>
+              </summary>
+              <div class="pt-2 text-text-muted text-sm leading-relaxed">
+                The rule is designed with an automatic fallback mechanism. If support indicators (Q and P) fall below the required safety thresholds—due to high latency, missed slots, or low validator participation—the system simply reverts to standard protocol finality timing without compromising safety.
+              </div>
+            </details>
+
+            <details class="group border-b border-text-muted/20 pb-3">
+              <summary class="flex items-center justify-between py-2 cursor-pointer">
+                <span class="text-text font-medium text-sm md:text-base">How much faster is FCR than the current system?</span>
+                <span class="faq-icon text-primary text-xl font-light">+</span>
+              </summary>
+              <div class="pt-2 text-text-muted text-sm leading-relaxed">
+                FCR reduces confirmation times from the current 12–16 minutes (64 blocks) to approximately 13 seconds. This represents a 98.75% improvement in confirmation latency.
+              </div>
+            </details>
+
+            <details class="group border-b border-text-muted/20 pb-3">
+              <summary class="flex items-center justify-between py-2 cursor-pointer">
+                <span class="text-text font-medium text-sm md:text-base">Which clients support FCR?</span>
+                <span class="faq-icon text-primary text-xl font-light">+</span>
+              </summary>
+              <div class="pt-2 text-text-muted text-sm leading-relaxed">
+                Standardized specifications are being integrated into the Ethereum consensus specs (PR #4747). Support is actively being developed and implemented in major consensus clients, including Lighthouse, Prysm, and Teku.
+              </div>
+            </details>
+
+            <details class="group border-b border-text-muted/20 pb-3">
+              <summary class="flex items-center justify-between py-2 cursor-pointer">
+                <span class="text-text font-medium text-sm md:text-base">Does FCR affect rollup and L2 security?</span>
+                <span class="faq-icon text-primary text-xl font-light">+</span>
+              </summary>
+              <div class="pt-2 text-text-muted text-sm leading-relaxed">
+                L2s that use FCR will never finalize an invalid block. The worst case is that the L2 would need to reorg with the L1 in the exceptional case there is an adversary with more than 25% stake.
+              </div>
+            </details>
+
+            <details class="group border-b border-text-muted/20 pb-3">
+              <summary class="flex items-center justify-between py-2 cursor-pointer">
+                <span class="text-text font-medium text-sm md:text-base">Can an adversary intentionally delay my confirmation?</span>
+                <span class="faq-icon text-primary text-xl font-light">+</span>
+              </summary>
+              <div class="pt-2 text-text-muted text-sm leading-relaxed">
+                FCR is designed to be robust against manipulation. While adversaries may attempt to influence timing, successfully preventing or reverting a fast confirmation would require controlling a significant portion of the validator set (exceeding the 25% adversarial threshold). As long as the network remains below this threshold, FCR remains secure.
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Section -->
+      <section class="bg-primary rounded-3xl px-12 py-20 md:px-16 md:py-28 lg:px-20 lg:py-32 text-center space-y-6">
+        <h3 class="text-background text-3xl md:text-4xl lg:text-5xl font-extrabold">Ready to ship?</h3>
+        <a href="#implement" class="inline-block bg-background text-primary text-sm md:text-base font-medium px-8 py-4 rounded-full hover:opacity-90 transition-opacity uppercase tracking-wider">
+          Read Documentation
+        </a>
+        <p class="text-background text-sm md:text-base">
+          Get in touch via fastconfirm@ethereum.org for questions
+        </p>
+      </section>
+
+      <!-- Footer -->
+      <footer class="pt-8 border-t border-text-muted/20">
+        <div class="flex flex-col md:flex-row items-start justify-between gap-8">
+          <div class="flex items-center gap-8">
+            <div class="flex flex-col">
+              <span class="text-primary text-2xl font-bold tracking-tight">FCR</span>
+              <span class="text-primary text-[10px] md:text-xs font-medium">Fast Confirmation Rule</span>
+            </div>
+            <svg class="h-8" viewBox="0 0 151 37" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.7405 27.8042V36.6871L0 20.9375L10.7405 27.8042Z" fill="#0DAFD2"/>
+              <path d="M21.4835 20.9375L10.7422 36.6871V27.8042L21.4835 20.9375Z" fill="#667BBC"/>
+              <path d="M21.4835 18.7178L10.7422 12.5908V25.5853L21.4835 18.7178Z" fill="#9E69AC"/>
+              <path d="M21.4835 18.7187L10.7422 0V12.5916L21.4835 18.7187Z" fill="#F58B77"/>
+              <path d="M10.7405 0V12.5916L0 18.7187L10.7405 0Z" fill="#F9EC7B"/>
+              <path d="M10.7405 12.5908V25.5853L0 18.7178L10.7405 12.5908Z" fill="#54BC7A"/>
+              <path d="M30.8789 28.1515C30.8789 27.6429 30.9831 27.1925 31.1914 26.8003C31.3998 26.4081 31.6909 26.1048 32.0647 25.8903C32.4385 25.6758 32.8705 25.5686 33.3607 25.5686C33.8326 25.5686 34.2523 25.6789 34.62 25.8995C34.9938 26.1201 35.2849 26.4296 35.4933 26.8279C35.7016 27.2262 35.8058 27.6797 35.8058 28.1883V28.5743H32.1934C32.2117 28.8807 32.3282 29.1289 32.5426 29.3189C32.7571 29.5089 33.039 29.6038 33.3883 29.6038C33.6334 29.6038 33.8602 29.5518 34.0685 29.4476C34.2769 29.3373 34.5036 29.1504 34.7487 28.8869L35.5668 29.7233C35.2849 30.0359 34.9601 30.281 34.5925 30.4587C34.2248 30.6303 33.8234 30.7161 33.3883 30.7161C32.8919 30.7161 32.4538 30.6088 32.0739 30.3943C31.6939 30.1799 31.3998 29.8796 31.1914 29.4935C30.9831 29.1013 30.8789 28.654 30.8789 28.1515ZM34.4821 27.6184C34.4576 27.3487 34.3381 27.1251 34.1237 26.9474C33.9153 26.7697 33.661 26.6808 33.3607 26.6808C33.0482 26.6808 32.7908 26.7666 32.5886 26.9382C32.3864 27.1098 32.2608 27.3365 32.2117 27.6184H34.4821Z" fill="#36364C"/>
+              <path d="M40.0561 26.883V28.8409C40.0561 29.0064 40.0928 29.1259 40.1664 29.1994C40.246 29.2729 40.3747 29.3097 40.5524 29.3097H41.6646V30.5782H40.4329C39.8937 30.5782 39.477 30.4526 39.1828 30.2013C38.8887 29.9439 38.7416 29.5793 38.7416 29.1075V26.883H37.5467V25.7065H38.7416V24.4655H40.0561V25.7065H41.968V26.883H40.0561Z" fill="#36364C"/>
+              <path d="M43.8927 23.8681H45.2071V26.1569H45.2255C45.5687 25.7647 46.0375 25.5686 46.6319 25.5686C46.9873 25.5686 47.3029 25.6544 47.5787 25.826C47.8544 25.9975 48.0689 26.2396 48.2221 26.5521C48.3753 26.8646 48.4519 27.2262 48.4519 27.6368V30.5782H47.1374V27.8114C47.1374 27.4866 47.0547 27.2323 46.8893 27.0485C46.7238 26.8646 46.4971 26.7727 46.2091 26.7727C45.8965 26.7727 45.6514 26.8646 45.4737 27.0485C45.296 27.2262 45.2071 27.4744 45.2071 27.793V30.5782H43.8927V23.8681Z" fill="#36364C"/>
+              <path d="M50.0549 28.1515C50.0549 27.6429 50.1591 27.1925 50.3674 26.8003C50.5758 26.4081 50.8668 26.1048 51.2406 25.8903C51.6144 25.6758 52.0465 25.5686 52.5367 25.5686C53.0086 25.5686 53.4283 25.6789 53.796 25.8995C54.1698 26.1201 54.4609 26.4296 54.6692 26.8279C54.8776 27.2262 54.9818 27.6797 54.9818 28.1883V28.5743H51.3693C51.3877 28.8807 51.5041 29.1289 51.7186 29.3189C51.9331 29.5089 52.215 29.6038 52.5643 29.6038C52.8094 29.6038 53.0361 29.5518 53.2445 29.4476C53.4528 29.3373 53.6796 29.1504 53.9247 28.8869L54.7428 29.7233C54.4609 30.0359 54.1361 30.281 53.7684 30.4587C53.4007 30.6303 52.9994 30.7161 52.5643 30.7161C52.0679 30.7161 51.6298 30.6088 51.2498 30.3943C50.8699 30.1799 50.5758 29.8796 50.3674 29.4935C50.1591 29.1013 50.0549 28.654 50.0549 28.1515ZM53.6581 27.6184C53.6336 27.3487 53.5141 27.1251 53.2996 26.9474C53.0913 26.7697 52.837 26.6808 52.5367 26.6808C52.2242 26.6808 51.9668 26.7666 51.7646 26.9382C51.5624 27.1098 51.4367 27.3365 51.3877 27.6184H53.6581Z" fill="#36364C"/>
+              <path d="M57.0352 25.7065H58.2944V26.1569H58.3128C58.5212 25.9485 58.7357 25.7984 58.9563 25.7065C59.183 25.6145 59.4404 25.5686 59.7284 25.5686C60.1512 25.5686 60.5158 25.6942 60.8222 25.9454C61.1286 26.1906 61.3431 26.5276 61.4657 26.9566L60.2339 27.361C60.093 26.9627 59.8019 26.7635 59.3607 26.7635C59.0298 26.7635 58.7786 26.8616 58.607 27.0577C58.4354 27.2476 58.3496 27.5111 58.3496 27.8482V30.5782H57.0352V25.7065Z" fill="#36364C"/>
+              <path d="M62.8389 28.1515C62.8389 27.6429 62.943 27.1925 63.1514 26.8003C63.3597 26.4081 63.6508 26.1048 64.0246 25.8903C64.3984 25.6758 64.8304 25.5686 65.3207 25.5686C65.7925 25.5686 66.2123 25.6789 66.58 25.8995C66.9538 26.1201 67.2449 26.4296 67.4532 26.8279C67.6616 27.2262 67.7657 27.6797 67.7657 28.1883V28.5743H64.1533C64.1717 28.8807 64.2881 29.1289 64.5026 29.3189C64.7171 29.5089 64.999 29.6038 65.3483 29.6038C65.5934 29.6038 65.8201 29.5518 66.0285 29.4476C66.2368 29.3373 66.4635 29.1504 66.7087 28.8869L67.5267 29.7233C67.2449 30.0359 66.9201 30.281 66.5524 30.4587C66.1847 30.6303 65.7833 30.7161 65.3483 30.7161C64.8519 30.7161 64.4137 30.6088 64.0338 30.3943C63.6539 30.1799 63.3597 29.8796 63.1514 29.4935C62.943 29.1013 62.8389 28.654 62.8389 28.1515ZM66.4421 27.6184C66.4176 27.3487 66.2981 27.1251 66.0836 26.9474C65.8753 26.7697 65.621 26.6808 65.3207 26.6808C65.0082 26.6808 64.7508 26.7666 64.5486 26.9382C64.3463 27.1098 64.2207 27.3365 64.1717 27.6184H66.4421Z" fill="#36364C"/>
+              <path d="M69.5066 28.9236V25.7065H70.8211V28.6203C70.8211 29.2147 71.1152 29.5119 71.7035 29.5119C71.967 29.5119 72.1753 29.4323 72.3285 29.2729C72.4879 29.1075 72.5675 28.8899 72.5675 28.6203V25.7065H73.882V30.5782H72.6227V30.1462H72.6043C72.4695 30.3177 72.2826 30.4556 72.0436 30.5598C71.8107 30.664 71.5656 30.7161 71.3082 30.7161C70.7322 30.7161 70.2879 30.5598 69.9754 30.2473C69.6629 29.9286 69.5066 29.4874 69.5066 28.9236Z" fill="#36364C"/>
+              <path d="M75.485 25.7065H76.6431V26.1293H76.6615C76.7657 25.9638 76.8975 25.8382 77.0568 25.7524C77.2222 25.6605 77.403 25.6145 77.5991 25.6145C77.9852 25.6145 78.2946 25.7953 78.5275 26.1569H78.5459C78.791 25.7953 79.128 25.6145 79.557 25.6145C79.9124 25.6145 80.2004 25.7402 80.421 25.9914C80.6416 26.2427 80.7519 26.5705 80.7519 26.9749V30.5782H79.5386V27.2047C79.5386 27.0638 79.5018 26.9566 79.4283 26.883C79.3548 26.8095 79.2506 26.7727 79.1158 26.7727C78.9871 26.7727 78.8829 26.8156 78.8033 26.9014C78.7297 26.9811 78.693 27.0914 78.693 27.2323V30.5782H77.544V27.2047C77.544 27.0699 77.5072 26.9658 77.4337 26.8922C77.3662 26.8126 77.2682 26.7727 77.1395 26.7727C77.0047 26.7727 76.8975 26.8156 76.8178 26.9014C76.7381 26.9811 76.6983 27.0914 76.6983 27.2323V30.5782H75.485V25.7065Z" fill="#36364C"/>
+              <path d="M38.2076 16.2889V18.1316H30.8789V16.2889H33.5375V12.519H31.0196V10.6763H35.549V16.2889H38.2076ZM33.4953 7.52539H35.5631V9.50878H33.4953V7.52539Z" fill="#989898"/>
+              <path d="M40.8013 10.6763H42.8129V11.3796H42.841C43.1411 11.0795 43.4646 10.8545 43.8116 10.7044C44.1586 10.545 44.5524 10.4653 44.9932 10.4653C45.4808 10.4653 45.9356 10.5825 46.3576 10.817C46.7796 11.042 47.1219 11.3937 47.3845 11.872C47.6471 12.3409 47.7784 12.927 47.7784 13.6303V18.1316H45.7668V13.8976C45.7668 13.4193 45.6449 13.0348 45.4011 12.7441C45.1573 12.4534 44.8056 12.308 44.3461 12.308C43.8679 12.308 43.4927 12.4487 43.2208 12.73C42.9488 13.002 42.8129 13.3818 42.8129 13.8694V18.1316H40.8013V10.6763Z" fill="#989898"/>
+              <path d="M57.6305 16.2889V18.1316H50.3018V16.2889H52.9604V12.519H50.4424V10.6763H54.9719V16.2889H57.6305ZM52.9182 7.52539H54.986V9.50878H52.9182V7.52539Z" fill="#989898"/>
+              <path d="M63.33 12.4768V15.473C63.33 15.7262 63.3863 15.9091 63.4988 16.0216C63.6207 16.1341 63.8176 16.1904 64.0896 16.1904H65.7917V18.1316H63.9067C63.0815 18.1316 62.4438 17.9394 61.9937 17.5549C61.5435 17.161 61.3185 16.603 61.3185 15.8809V12.4768H59.4898V10.6763H61.3185V8.77732H63.33V10.6763H66.2559V12.4768H63.33Z" fill="#989898"/>
+              <path d="M76.2486 16.2889V18.1316H68.9199V16.2889H71.5785V12.519H69.0606V10.6763H73.59V16.2889H76.2486ZM71.5363 7.52539H73.6041V9.50878H71.5363V7.52539Z" fill="#989898"/>
+              <path d="M78.9549 16.1341C78.9549 15.4402 79.1893 14.901 79.6582 14.5165C80.1365 14.132 80.9289 13.8507 82.0355 13.6725C82.6169 13.5787 83.0108 13.4756 83.2171 13.363C83.4328 13.2411 83.5406 13.0817 83.5406 12.8848C83.5406 12.6597 83.4375 12.4815 83.2311 12.3502C83.0248 12.2189 82.7435 12.1533 82.3871 12.1533C81.9839 12.1533 81.6322 12.2752 81.3322 12.519C81.0414 12.7628 80.8539 13.0864 80.7695 13.4896L78.8986 13.0676C78.9924 12.5612 79.2034 12.1111 79.5316 11.7172C79.8599 11.3234 80.2725 11.0186 80.7695 10.8029C81.2665 10.5778 81.8057 10.4653 82.3871 10.4653C83.3437 10.4653 84.108 10.7326 84.68 11.2671C85.252 11.8016 85.5381 12.5143 85.5381 13.4052V18.1316H83.7375V17.3017H83.7094C83.4937 17.6299 83.1889 17.8878 82.7951 18.0753C82.4106 18.2535 81.9745 18.3426 81.4869 18.3426C80.9992 18.3426 80.5632 18.2488 80.1787 18.0613C79.7942 17.8737 79.4941 17.6111 79.2784 17.2735C79.0627 16.9359 78.9549 16.5561 78.9549 16.1341ZM83.625 15.3605V14.5165H83.5969C83.5125 14.6571 83.3718 14.7697 83.1749 14.8541C82.9779 14.9385 82.6685 15.0229 82.2465 15.1073C81.7213 15.2198 81.3603 15.3417 81.1634 15.473C80.9664 15.5949 80.868 15.7684 80.868 15.9935C80.868 16.2092 80.9524 16.3733 81.1212 16.4858C81.2993 16.5983 81.5525 16.6546 81.8807 16.6546C82.1808 16.6546 82.4669 16.5983 82.7388 16.4858C83.0108 16.3639 83.2265 16.2045 83.3859 16.0075C83.5453 15.8012 83.625 15.5855 83.625 15.3605Z" fill="#989898"/>
+              <path d="M91.6596 12.4768V15.473C91.6596 15.7262 91.7159 15.9091 91.8284 16.0216C91.9503 16.1341 92.1472 16.1904 92.4192 16.1904H94.1212V18.1316H92.2363C91.4111 18.1316 90.7734 17.9394 90.3233 17.5549C89.8731 17.161 89.6481 16.603 89.6481 15.8809V12.4768H87.8194V10.6763H89.6481V8.77732H91.6596V10.6763H94.5854V12.4768H91.6596Z" fill="#989898"/>
+              <path d="M104.578 16.2889V18.1316H97.2495V16.2889H99.9081V12.519H97.3902V10.6763H101.92V16.2889H104.578ZM99.8659 7.52539H101.934V9.50878H99.8659V7.52539Z" fill="#989898"/>
+              <path d="M105.594 10.6763H107.858L109.799 15.5433H109.828L111.769 10.6763H114.034L110.658 18.1316H108.97L105.594 10.6763Z" fill="#989898"/>
+              <path d="M115.727 14.418C115.727 13.6397 115.886 12.9504 116.205 12.3502C116.524 11.7501 116.97 11.2859 117.542 10.9576C118.114 10.6294 118.775 10.4653 119.525 10.4653C120.247 10.4653 120.889 10.6341 121.452 10.9717C122.024 11.3093 122.47 11.7829 122.788 12.3924C123.107 13.002 123.267 13.6959 123.267 14.4743V15.0651H117.739C117.767 15.534 117.945 15.9138 118.273 16.2045C118.601 16.4952 119.033 16.6405 119.567 16.6405C119.942 16.6405 120.289 16.5608 120.608 16.4014C120.927 16.2326 121.274 15.9466 121.649 15.5433L122.901 16.8234C122.47 17.3017 121.973 17.6768 121.41 17.9487C120.847 18.2113 120.233 18.3426 119.567 18.3426C118.808 18.3426 118.137 18.1785 117.556 17.8503C116.974 17.522 116.524 17.0625 116.205 16.4717C115.886 15.8716 115.727 15.187 115.727 14.418ZM121.241 13.6022C121.204 13.1895 121.021 12.8472 120.693 12.5753C120.374 12.3033 119.984 12.1674 119.525 12.1674C119.047 12.1674 118.653 12.2987 118.343 12.5612C118.034 12.8238 117.842 13.1708 117.767 13.6022H121.241Z" fill="#989898"/>
+            </svg>
+          </div>
+          <div class="flex gap-12 md:gap-16">
+            <div class="space-y-3">
+              <div class="text-primary text-xs font-medium tracking-wider">Resource Hub</div>
+              <div class="space-y-2">
+                <a href="#" class="block text-text-muted text-xs font-medium hover:text-primary transition-colors">DOCUMENTATION</a>
+                <a href="#" class="block text-text-muted text-xs font-medium hover:text-primary transition-colors">GITHUB</a>
+                <a href="#" class="block text-text-muted text-xs font-medium hover:text-primary transition-colors">ETHRESEAR.CH</a>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div class="text-primary text-xs font-medium tracking-wider">Community</div>
+              <div class="space-y-2">
+                <a href="#" class="block text-text-muted text-xs font-medium hover:text-primary transition-colors">ETHEREUM FOUNDATION BLOG</a>
+                <a href="#" class="block text-text-muted text-xs font-medium hover:text-primary transition-colors">DEVELOPER FORUM</a>
+                <a href="#" class="block text-text-muted text-xs font-medium hover:text-primary transition-colors">ETHEREUM.ORG</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

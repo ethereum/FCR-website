@@ -1,0 +1,33 @@
+# OS
+.DS_Store
+
+# Environment
+.env
+.env.local
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+
+# Netlify
+.netlify/
+
+# Claude / Playwright
+.claude/
+.playwright-mcp/
+
+# Screenshots
+*.png
+
+# Previous iterations & drafts
+first_ideas/
+second_ideas/
+third_ideas/
+forth_ideas/
+site/
+mockups.json
+figma-design.png
+page-screenshot.png
+FCR Content proposal.pdf
