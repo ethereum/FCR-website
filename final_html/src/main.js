@@ -18,18 +18,12 @@ function handleStickyHeader() {
       isSticky = shouldBeSticky
 
       if (isSticky) {
-        // Sticky state: hide subtitle, show border, smaller nav font
-        subtitle.style.opacity = '0'
-        subtitle.style.height = '0'
-        subtitle.style.overflow = 'hidden'
+        // Sticky state: show border, smaller nav font
         headerInner.classList.remove('border-transparent')
         headerInner.classList.add('border-primary')
         if (headerNav) headerNav.classList.add('sticky')
       } else {
-        // Normal state: show subtitle, hide border, normal nav font
-        subtitle.style.opacity = '1'
-        subtitle.style.height = 'auto'
-        subtitle.style.overflow = 'visible'
+        // Normal state: hide border, normal nav font
         headerInner.classList.remove('border-primary')
         headerInner.classList.add('border-transparent')
         if (headerNav) headerNav.classList.remove('sticky')
