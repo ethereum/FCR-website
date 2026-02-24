@@ -32,33 +32,17 @@
 
       <!-- Hero Section -->
       <section id="overview" class="space-y-8">
-        <h1 class="text-primary font-black leading-none tracking-tighter text-center">
-          <span id="hero-number" class="text-[160px] md:text-[280px] lg:text-[380px]">0</span><span class="text-[80px] md:text-[140px] lg:text-[180px]"> slot</span>
-        </h1>
-
-        <!-- Stats Bar -->
-        <div class="flex justify-center">
-          <div class="bg-primary rounded-full px-4 md:px-8 py-2 md:py-3 inline-flex items-center divide-x divide-background/30">
-            <div class="text-center px-4 md:px-6">
-              <div class="text-background text-base md:text-xl font-bold">~98%</div>
-              <div class="text-background text-[8px] md:text-[10px] opacity-70 uppercase tracking-wider">Speed Improvement</div>
-            </div>
-            <div class="text-center px-4 md:px-6">
-              <div class="text-background text-base md:text-xl font-bold">~13s</div>
-              <div class="text-background text-[8px] md:text-[10px] opacity-70 uppercase tracking-wider">Confirmation Time</div>
-            </div>
-            <div class="text-center px-4 md:px-6">
-              <div class="text-background text-base md:text-xl font-bold">0</div>
-              <div class="text-background text-[8px] md:text-[10px] opacity-70 uppercase tracking-wider">Hard Forks Required</div>
-            </div>
-          </div>
+        <div class="text-center">
+          <h1 class="text-primary font-black leading-none tracking-tighter">
+            <span class="text-[160px] md:text-[280px] lg:text-[380px]">1</span><span class="text-[160px] md:text-[280px] lg:text-[380px]"> slot</span>
+          </h1>
+          <h2 class="text-primary text-3xl md:text-5xl lg:text-6xl font-extrabold leading-tight max-w-4xl mx-auto mt-2">
+            Single-slot confirmation<br>for Ethereum.
+          </h2>
         </div>
 
         <!-- Headline -->
         <div class="text-center space-y-6">
-          <h2 class="text-primary text-3xl md:text-5xl lg:text-6xl font-extrabold leading-tight max-w-4xl mx-auto">
-            Single-slot confirmation for Ethereum.
-          </h2>
           <p class="text-text-muted text-lg md:text-xl max-w-2xl mx-auto">
             Confirm transactions in ~13 seconds — down from ~13 minutes. No hard fork required.
           </p>
@@ -72,6 +56,22 @@
           </div>
         </div>
       </section>
+
+      <!-- Stats Bar -->
+      <div class="flex items-center justify-around divide-x divide-primary/20 py-4">
+        <div class="text-center px-4 md:px-6 flex-1">
+          <div class="text-primary text-4xl md:text-6xl font-black">~98%</div>
+          <div class="text-text-muted text-[10px] md:text-xs uppercase tracking-wider mt-1">Speed Improvement</div>
+        </div>
+        <div class="text-center px-4 md:px-6 flex-1">
+          <div class="text-primary text-4xl md:text-6xl font-black">~13s</div>
+          <div class="text-text-muted text-[10px] md:text-xs uppercase tracking-wider mt-1">Confirmation Time</div>
+        </div>
+        <div class="text-center px-4 md:px-6 flex-1">
+          <div class="text-primary text-4xl md:text-6xl font-black">0</div>
+          <div class="text-text-muted text-[10px] md:text-xs uppercase tracking-wider mt-1">Hard Forks Required</div>
+        </div>
+      </div>
 
       <!-- Feature Intro -->
       <section class="space-y-8">
@@ -104,7 +104,7 @@
 
       <!-- Comparison Matrix -->
       <section id="comparison" class="space-y-8">
-        <h3 class="text-primary text-3xl md:text-4xl lg:text-5xl font-extrabold">How FCR Compares</h3>
+        <h3 class="text-primary text-3xl md:text-4xl lg:text-5xl font-extrabold">Trade-offs</h3>
 
         <div class="overflow-x-auto">
           <table class="w-full text-sm md:text-base border-collapse">
@@ -161,7 +161,6 @@
 
       <!-- Trade-offs Section -->
       <section id="risk" class="space-y-8">
-        <h3 class="text-primary text-3xl md:text-4xl lg:text-5xl font-extrabold">Trade-offs</h3>
         <p class="text-text-muted text-sm md:text-base max-w-3xl">
           FCR optimizes for speed; finality optimizes for extreme robustness.
         </p>

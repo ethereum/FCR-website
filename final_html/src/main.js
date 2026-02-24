@@ -1,33 +1,6 @@
 import './style.css'
 import { BlockSimulation } from './simulation.js'
 
-// Animate hero number from 0 to 1
-function animateNumber() {
-  const element = document.getElementById('hero-number')
-  if (!element) return
-
-  const target = 1
-  const duration = 1500
-  const start = performance.now()
-
-  function update(currentTime) {
-    const elapsed = currentTime - start
-    const progress = Math.min(elapsed / duration, 1)
-
-    // Easing function (ease-out)
-    const easeOut = 1 - Math.pow(1 - progress, 3)
-    const current = Math.round(easeOut * target)
-
-    element.textContent = current
-
-    if (progress < 1) {
-      requestAnimationFrame(update)
-    }
-  }
-
-  requestAnimationFrame(update)
-}
-
 // Handle sticky header state
 function handleStickyHeader() {
   const headerInner = document.getElementById('header-inner')
@@ -123,7 +96,6 @@ function initSimulation() {
 
 // Run on load
 document.addEventListener('DOMContentLoaded', () => {
-  animateNumber()
   handleStickyHeader()
   handleScrollSpy()
   initSimulation()
