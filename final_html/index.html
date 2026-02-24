@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FCR - Fast Confirmation Rule for Ethereum</title>
     <link rel="stylesheet" href="/src/style.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
   </head>
   <body class="bg-primary min-h-screen flex items-center justify-center p-4 md:p-8 lg:p-16">
     <div class="bg-background rounded-2xl md:rounded-[50px] w-full max-w-[1400px] px-6 py-8 md:px-12 md:py-12 lg:px-16 lg:py-16 space-y-24 md:space-y-32 lg:space-y-40 relative">
@@ -254,39 +255,43 @@
         <div class="grid md:grid-cols-2 gap-6">
           <!-- Exchanges -->
           <div class="rounded-3xl p-6 md:p-8 space-y-4 border-2 border-primary/40">
-            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-text-muted/30 flex items-center justify-center">
-              <span class="text-primary text-xs">icons???</span>
+            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/10 flex items-center justify-center">
+              <i data-lucide="arrow-up-down" class="w-8 h-8 md:w-10 md:h-10 text-primary"></i>
             </div>
             <h4 class="text-primary text-xl md:text-2xl font-bold">Exchanges</h4>
-            <ul class="text-text-muted text-sm space-y-4">
+            <ul class="text-text-muted text-lg space-y-4">
               <li class="flex items-start gap-3">
-                <span class="text-text mt-0.5">■</span>
+                <span class="text-primary mt-1.5 text-[8px]">●</span>
                 <span>Don't leave your users worrying. Credit deposits within seconds.</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-text mt-0.5">■</span>
+                <span class="text-primary mt-1.5 text-[8px]">●</span>
                 <span>Deepen order book liquidity. Minimize time assets are idle while waiting to be confirmed.</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-text mt-0.5">■</span>
+                <span class="text-primary mt-1.5 text-[8px]">●</span>
                 <span>Proven safe under normal conditions — stronger than waiting for a fixed number of blocks.</span>
               </li>
             </ul>
+            <a href="/Fast Confirmation Rule for Exchanges.pdf" target="_blank" class="inline-flex items-center gap-2 mt-2 px-4 py-2 border-2 border-primary text-primary text-sm font-medium rounded-full hover:bg-primary hover:text-background transition-colors">
+              One pager info
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M13 3v5a1 1 0 001 1h5"/></svg>
+            </a>
           </div>
 
           <!-- Cross-Chain Bridges -->
           <div class="rounded-3xl p-6 md:p-8 space-y-4 border-2 border-primary/40">
-            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-text-muted/30 flex items-center justify-center">
-              <span class="text-primary text-xs">icons???</span>
+            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/10 flex items-center justify-center">
+              <i data-lucide="link" class="w-8 h-8 md:w-10 md:h-10 text-primary"></i>
             </div>
             <h4 class="text-primary text-xl md:text-2xl font-bold">Cross-Chain Bridges</h4>
-            <ul class="text-text-muted text-sm space-y-4">
+            <ul class="text-text-muted text-lg space-y-4">
               <li class="flex items-start gap-3">
-                <span class="text-text mt-0.5">■</span>
+                <span class="text-primary mt-1.5 text-[8px]">●</span>
                 <span>Manage risk with provable security. Under normal network conditions, reorgs are no concern with FCR.</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-text mt-0.5">■</span>
+                <span class="text-primary mt-1.5 text-[8px]">●</span>
                 <span>Reduce capital lockup for cross-chain transfers.</span>
               </li>
             </ul>
@@ -294,42 +299,50 @@
 
           <!-- L2s -->
           <div class="rounded-3xl p-6 md:p-8 space-y-4 border-2 border-primary/40">
-            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-text-muted/30 flex items-center justify-center">
-              <span class="text-primary text-xs">icons???</span>
+            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/10 flex items-center justify-center">
+              <i data-lucide="layers" class="w-8 h-8 md:w-10 md:h-10 text-primary"></i>
             </div>
             <h4 class="text-primary text-xl md:text-2xl font-bold">L2s</h4>
-            <ul class="text-text-muted text-sm space-y-4">
+            <ul class="text-text-muted text-lg space-y-4">
               <li class="flex items-start gap-3">
-                <span class="text-text mt-0.5">■</span>
+                <span class="text-primary mt-1.5 text-[8px]">●</span>
                 <span>Confirm deposits from L1 within seconds.</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-text mt-0.5">■</span>
+                <span class="text-primary mt-1.5 text-[8px]">●</span>
                 <span>Tap into Ethereum's liquidity within seconds.</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-text mt-0.5">■</span>
+                <span class="text-primary mt-1.5 text-[8px]">●</span>
                 <span>Automatically fall back to a safe head block if there are too few attestations.</span>
               </li>
             </ul>
+            <a href="/Fast Confirmation Rule for L2s.pdf" target="_blank" class="inline-flex items-center gap-2 mt-2 px-4 py-2 border-2 border-primary text-primary text-sm font-medium rounded-full hover:bg-primary hover:text-background transition-colors">
+              One pager info
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M13 3v5a1 1 0 001 1h5"/></svg>
+            </a>
           </div>
 
           <!-- RPC & Infrastructure Providers -->
           <div class="rounded-3xl p-6 md:p-8 space-y-4 border-2 border-primary/40">
-            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-text-muted/30 flex items-center justify-center">
-              <span class="text-primary text-xs">icons???</span>
+            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/10 flex items-center justify-center">
+              <i data-lucide="server" class="w-8 h-8 md:w-10 md:h-10 text-primary"></i>
             </div>
             <h4 class="text-primary text-xl md:text-2xl font-bold">RPC & Infrastructure Providers</h4>
-            <ul class="text-text-muted text-sm space-y-4">
+            <ul class="text-text-muted text-lg space-y-4">
               <li class="flex items-start gap-3">
-                <span class="text-text mt-0.5">■</span>
+                <span class="text-primary mt-1.5 text-[8px]">●</span>
                 <span>The <code class="bg-text/10 px-1.5 py-0.5 rounded text-xs">safe</code> block tag will return the last fast-confirmed block. RPCs automatically support FCR — no implementation required.</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-text mt-0.5">■</span>
+                <span class="text-primary mt-1.5 text-[8px]">●</span>
                 <span>Be aware the change may impact customers currently relying on the <code class="bg-text/10 px-1.5 py-0.5 rounded text-xs">safe</code> tag returning the last justified block.</span>
               </li>
             </ul>
+            <a href="/Fast Confirmation Rule for RPCs.pdf" target="_blank" class="inline-flex items-center gap-2 mt-2 px-4 py-2 border-2 border-primary text-primary text-sm font-medium rounded-full hover:bg-primary hover:text-background transition-colors">
+              One pager info
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M13 3v5a1 1 0 001 1h5"/></svg>
+            </a>
           </div>
         </div>
       </section>
@@ -575,5 +588,6 @@
       </footer>
     </div>
     <script type="module" src="/src/main.js"></script>
+    <script>document.addEventListener('DOMContentLoaded', () => lucide.createIcons());</script>
   </body>
 </html>
