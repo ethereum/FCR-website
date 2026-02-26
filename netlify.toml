@@ -1,7 +1,7 @@
 [build]
   base = "final_html"
   command = "npm run build"
-  publish = "final_html/dist"
+  publish = "dist"
 
 [[headers]]
   for = "/*"
