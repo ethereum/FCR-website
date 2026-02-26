@@ -1,6 +1,7 @@
 [build]
-  base = "site"
-  publish = "site"
+  base = "final_html"
+  command = "npm run build"
+  publish = "final_html/dist"
 
 [[headers]]
   for = "/*"
