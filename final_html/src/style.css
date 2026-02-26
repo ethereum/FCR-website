@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
 @theme {
   /* Colors - from design.json */
   --color-primary: #f05f36;
@@ -28,6 +32,16 @@
   --radius-full: 9999px;
 }
 
+/* Scroll hint bounce animation */
+.scroll-hint {
+  animation: bounce-down 2s ease-in-out infinite;
+}
+
+@keyframes bounce-down {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
 /* Hero parallax — hero stays in place, content scrolls over */
 #overview {
   position: sticky;
@@ -48,6 +62,10 @@
 
 @media (min-width: 1024px) {
   #scroll-content { padding: 0 4rem; }
+}
+
+@media (min-width: 1200px) {
+  #scroll-content { padding: 0 6rem; }
 }
 
 /* Header loses rounded top when sticky/scrolled */

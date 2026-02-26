@@ -11,9 +11,10 @@
     <div class="bg-background rounded-2xl md:rounded-[50px] w-full max-w-[1400px] relative">
 
       <!-- Hero Section (fixed in place, no scroll) -->
-      <section id="overview" class="h-screen flex flex-col items-center justify-center px-6 md:px-12 lg:px-16">
+      <section id="overview" class="h-screen flex flex-col items-center justify-center relative">
         <div class="text-center space-y-8">
           <div>
+            <div class="text-primary text-2xl md:text-4xl font-light uppercase" style="letter-spacing:4px;">Fast Confirmation Rule</div>
             <h1 class="text-primary font-black leading-none tracking-tighter">
               <span class="text-[160px] md:text-[280px] lg:text-[26vw]">1</span><span class="text-[160px] md:text-[280px] lg:text-[26vw]"> slot</span>
             </h1>
@@ -35,6 +36,10 @@
             </div>
           </div>
         </div>
+        <a href="#overview-stats" class="absolute bottom-16 flex flex-col items-center gap-2 text-text-muted hover:text-primary transition-colors scroll-hint">
+          <span class="text-xs font-light uppercase" style="letter-spacing:2px;">Scroll to learn more</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 14l-7 7m0 0l-7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
       </section>
 
       <!-- Scrolling content that covers the hero -->
@@ -42,18 +47,18 @@
 
       <!-- Sticky Header (hidden until scroll-content reaches top) -->
       <header id="header" class="sticky top-0 z-50 transition-opacity duration-300 opacity-0">
-        <div class="flex items-center justify-between bg-background px-6 md:px-12 lg:px-16 py-4 border-b-2 border-transparent transition-all duration-300" id="header-inner">
-          <div class="flex items-baseline gap-2">
+        <div class="flex items-center justify-between bg-background py-4 border-b-2 border-transparent transition-all duration-300" id="header-inner">
+          <div class="flex flex-col min-[1200px]:flex-row min-[1200px]:items-baseline min-[1200px]:gap-2">
             <span class="text-primary text-3xl md:text-4xl font-bold tracking-tight">FCR</span>
-            <span id="header-subtitle" class="text-primary text-xs md:text-sm font-medium transition-all duration-300">Fast Confirmation Rule</span>
+            <span id="header-subtitle" class="text-primary text-[9px] md:text-[10px] font-light uppercase transition-all duration-300" style="letter-spacing:2px;">Fast Confirmation Rule</span>
           </div>
           <div class="hidden lg:flex items-center gap-8">
             <nav id="header-nav" class="flex items-center gap-6 transition-all duration-300">
-              <a href="#overview" class="nav-link text-sm font-medium tracking-wide">OVERVIEW</a>
-              <a href="#use-cases" class="nav-link text-sm font-medium tracking-wide">USE CASES</a>
-              <a href="#risk" class="nav-link text-sm font-medium tracking-wide">TRADE-OFFS</a>
-              <a href="#implement" class="nav-link text-sm font-medium tracking-wide">IMPLEMENT</a>
-              <a href="#faq" class="nav-link text-sm font-medium tracking-wide">FAQ</a>
+              <a href="#overview-stats" class="nav-link text-xs font-medium tracking-wide">OVERVIEW</a>
+              <a href="#use-cases" class="nav-link text-xs font-medium tracking-wide">USE CASES</a>
+              <a href="#risk" class="nav-link text-xs font-medium tracking-wide">TRADE-OFFS</a>
+              <a href="#implement" class="nav-link text-xs font-medium tracking-wide">IMPLEMENT</a>
+              <a href="#faq" class="nav-link text-xs font-medium tracking-wide">FAQ</a>
             </nav>
             <a href="#contact" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-full hover:bg-primary-dark transition-colors whitespace-nowrap">
               Get in Touch
@@ -63,7 +68,7 @@
       </header>
 
       <!-- Stats Bar -->
-      <div class="flex items-center justify-around divide-x divide-primary/20 py-4 pt-6 md:pt-8">
+      <div id="overview-stats" class="flex items-center justify-around divide-x divide-primary/20 py-4 pt-6 md:pt-8">
         <div class="text-center px-4 md:px-6 flex-1">
           <div class="text-primary text-4xl md:text-6xl font-black" data-count-to="98" data-count-prefix="~" data-count-suffix="%">~0%</div>
           <div class="text-text-muted text-[10px] md:text-xs uppercase tracking-wider mt-1">Speed Improvement</div>
@@ -492,7 +497,7 @@
           <div class="flex items-center gap-8">
             <div class="flex flex-col">
               <span class="text-primary text-2xl font-bold tracking-tight">FCR</span>
-              <span class="text-primary text-[10px] md:text-xs font-medium">Fast Confirmation Rule</span>
+              <span class="text-primary text-[9px] md:text-[10px] font-light uppercase" style="letter-spacing:2px;">Fast Confirmation Rule</span>
             </div>
             <svg class="h-8" viewBox="0 0 151 37" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M10.7405 27.8042V36.6871L0 20.9375L10.7405 27.8042Z" fill="#0DAFD2"/>
