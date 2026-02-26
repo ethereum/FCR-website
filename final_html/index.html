@@ -11,32 +11,32 @@
     <div class="bg-background rounded-2xl md:rounded-[50px] w-full max-w-[1400px] relative">
 
       <!-- Hero Section (fixed in place, no scroll) -->
-      <section id="overview" class="h-screen flex flex-col items-center justify-center relative">
-        <div class="text-center space-y-8">
+      <section id="overview" class="h-screen flex flex-col items-center justify-center relative px-4">
+        <div class="text-center space-y-4 md:space-y-8">
           <div>
-            <div class="text-primary text-2xl md:text-4xl font-light uppercase" style="letter-spacing:4px;">Fast Confirmation Rule</div>
+            <div class="text-primary text-base md:text-4xl font-light uppercase" style="letter-spacing:4px;">Fast Confirmation Rule</div>
             <h1 class="text-primary font-black leading-none tracking-tighter">
-              <span class="text-[160px] md:text-[280px] lg:text-[26vw]">1</span><span class="text-[160px] md:text-[280px] lg:text-[26vw]"> slot</span>
+              <span class="block md:inline text-[40vw] md:text-[280px] lg:text-[26vw]">1</span><span class="hidden md:inline text-[280px] lg:text-[26vw]"> </span><span class="block md:inline text-[28vw] md:text-[280px] lg:text-[26vw]">slot</span>
             </h1>
-            <h2 class="text-primary text-3xl md:text-5xl lg:text-[4.1vw] font-extrabold leading-tight mx-auto mt-2 lg:whitespace-nowrap">
+            <h2 class="text-primary text-2xl md:text-5xl lg:text-[4.1vw] font-extrabold leading-tight mx-auto mt-2 lg:whitespace-nowrap">
               Single-slot confirmation<br class="lg:hidden"> for Ethereum.
             </h2>
           </div>
-          <div class="space-y-6">
-            <p class="text-text-muted text-lg md:text-xl mx-auto">
+          <div class="space-y-4 md:space-y-6">
+            <p class="text-text-muted text-sm md:text-xl mx-auto">
               Confirm transactions in ~13 seconds — down from ~13 minutes. No hard fork required.
             </p>
-            <div class="flex justify-center gap-4 md:gap-7">
-              <a href="#contact" class="bg-primary text-background text-sm md:text-base font-medium px-10 md:px-14 py-3 md:py-4 rounded-full hover:bg-primary-dark transition-colors">
+            <div class="flex justify-center gap-3 md:gap-7">
+              <a href="#contact" class="bg-primary text-background text-sm md:text-base font-medium px-8 md:px-14 py-3 md:py-4 rounded-full hover:bg-primary-dark transition-colors">
                 Get in Touch
               </a>
-              <a href="#use-cases" class="border-2 border-primary text-primary text-sm md:text-base font-medium px-10 md:px-14 py-3 md:py-4 rounded-full hover:bg-primary hover:text-background transition-colors">
+              <a href="#use-cases" class="border-2 border-primary text-primary text-sm md:text-base font-medium px-8 md:px-14 py-3 md:py-4 rounded-full hover:bg-primary hover:text-background transition-colors">
                 Use Cases
               </a>
             </div>
           </div>
         </div>
-        <a href="#overview-stats" class="absolute bottom-16 flex flex-col items-center gap-2 text-text-muted hover:text-primary transition-colors scroll-hint">
+        <a href="#overview-stats" class="absolute bottom-12 md:bottom-24 flex flex-col items-center gap-2 text-text-muted hover:text-primary transition-colors scroll-hint">
           <span class="text-xs font-light uppercase" style="letter-spacing:2px;">Scroll to learn more</span>
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 14l-7 7m0 0l-7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
@@ -64,22 +64,39 @@
               Get in Touch
             </a>
           </div>
+          <!-- Hamburger button (mobile) -->
+          <button id="menu-toggle" class="lg:hidden flex flex-col justify-center items-center w-10 h-10 gap-1.5" aria-label="Toggle menu">
+            <span class="hamburger-line block w-6 h-0.5 bg-primary transition-all duration-300"></span>
+            <span class="hamburger-line block w-6 h-0.5 bg-primary transition-all duration-300"></span>
+            <span class="hamburger-line block w-6 h-0.5 bg-primary transition-all duration-300"></span>
+          </button>
         </div>
+        <!-- Mobile menu -->
+        <nav id="mobile-menu" class="lg:hidden hidden flex-col bg-background pb-6 border-b-2 border-primary/10">
+          <a href="#overview-stats" class="mobile-nav-link text-primary text-sm font-medium tracking-wide py-3 hover:text-primary-dark">OVERVIEW</a>
+          <a href="#use-cases" class="mobile-nav-link text-primary text-sm font-medium tracking-wide py-3 hover:text-primary-dark">USE CASES</a>
+          <a href="#risk" class="mobile-nav-link text-primary text-sm font-medium tracking-wide py-3 hover:text-primary-dark">TRADE-OFFS</a>
+          <a href="#implement" class="mobile-nav-link text-primary text-sm font-medium tracking-wide py-3 hover:text-primary-dark">IMPLEMENT</a>
+          <a href="#faq" class="mobile-nav-link text-primary text-sm font-medium tracking-wide py-3 hover:text-primary-dark">FAQ</a>
+          <a href="#contact" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-full hover:bg-primary-dark transition-colors text-center mt-4">
+            Get in Touch
+          </a>
+        </nav>
       </header>
 
       <!-- Stats Bar -->
-      <div id="overview-stats" class="flex items-center justify-around divide-x divide-primary/20 py-4 pt-6 md:pt-8">
+      <div id="overview-stats" class="flex flex-col md:flex-row items-center justify-around md:divide-x divide-primary/20 py-4 pt-6 md:pt-8 gap-6 md:gap-0">
         <div class="text-center px-4 md:px-6 flex-1">
-          <div class="text-primary text-4xl md:text-6xl font-black" data-count-to="98" data-count-prefix="~" data-count-suffix="%">~0%</div>
-          <div class="text-text-muted text-[10px] md:text-xs uppercase tracking-wider mt-1">Speed Improvement</div>
+          <div class="text-primary text-5xl md:text-6xl font-black" data-count-to="98" data-count-prefix="~" data-count-suffix="%">~0%</div>
+          <div class="text-text-muted text-xs uppercase tracking-wider mt-1">Speed Improvement</div>
+        </div>
+        <div class="text-center px-4 md:px-6 flex-1 border-y md:border-y-0 border-primary/20 py-6 md:py-0 w-full md:w-auto">
+          <div class="text-primary text-5xl md:text-6xl font-black" data-count-to="13" data-count-prefix="~" data-count-suffix="s">~0s</div>
+          <div class="text-text-muted text-xs uppercase tracking-wider mt-1">Confirmation Time</div>
         </div>
         <div class="text-center px-4 md:px-6 flex-1">
-          <div class="text-primary text-4xl md:text-6xl font-black" data-count-to="13" data-count-prefix="~" data-count-suffix="s">~0s</div>
-          <div class="text-text-muted text-[10px] md:text-xs uppercase tracking-wider mt-1">Confirmation Time</div>
-        </div>
-        <div class="text-center px-4 md:px-6 flex-1">
-          <div class="text-primary text-4xl md:text-6xl font-black" data-count-to="0">0</div>
-          <div class="text-text-muted text-[10px] md:text-xs uppercase tracking-wider mt-1">Hard Forks Required</div>
+          <div class="text-primary text-5xl md:text-6xl font-black" data-count-to="0">0</div>
+          <div class="text-text-muted text-xs uppercase tracking-wider mt-1">Hard Forks Required</div>
         </div>
       </div>
 
@@ -112,7 +129,12 @@
 
       <!-- Use Cases Section (elevated) -->
       <section id="use-cases" class="space-y-8 mt-24 md:mt-32 lg:mt-40">
-        <h3 class="text-primary text-3xl md:text-4xl lg:text-5xl font-extrabold">Use Cases</h3>
+        <div class="space-y-4">
+          <h3 class="text-primary text-3xl md:text-4xl lg:text-5xl font-extrabold">Use Cases</h3>
+          <p class="text-text-muted text-sm md:text-base max-w-3xl">
+            From exchanges to rollups, any application waiting on Ethereum confirmations can benefit from FCR. Here's how different players in the ecosystem can put single-slot confirmation to work.
+          </p>
+        </div>
 
         <div class="grid md:grid-cols-2 gap-6">
           <!-- Exchanges -->
@@ -211,7 +233,12 @@
 
       <!-- Comparison Table (Trade-offs) — FCR in middle column -->
       <section id="risk" class="space-y-8 mt-24 md:mt-32 lg:mt-40">
-        <h3 class="text-primary text-3xl md:text-4xl lg:text-5xl font-extrabold">Trade-offs</h3>
+        <div class="space-y-4">
+          <h3 class="text-primary text-3xl md:text-4xl lg:text-5xl font-extrabold">Trade-offs</h3>
+          <p class="text-text-muted text-sm md:text-base max-w-3xl">
+            FCR sits between k-deep confirmation and full finality — offering deterministic guarantees at near-instant speed. The right choice depends on your security requirements and latency tolerance.
+          </p>
+        </div>
 
         <div class="overflow-x-auto">
           <table class="w-full text-sm md:text-base border-collapse">
@@ -269,8 +296,8 @@
               <tr>
                 <td class="text-text font-medium py-3 px-4 border-b border-text-muted/10">Best suited for</td>
                 <td class="text-text-muted py-3 px-4 border-b border-text-muted/10">&mdash;</td>
-                <td class="text-text-muted py-3 px-4 border-b border-text-muted/10 bg-primary/5">L2 deposits, exchange deposits, bridges</td>
-                <td class="text-text-muted py-3 px-4 border-b border-text-muted/10">High-value settlements</td>
+                <td class="text-text-muted py-3 px-4 border-b border-text-muted/10 bg-primary/5">L2 deposits, exchange deposits, bridge transfers</td>
+                <td class="text-text-muted py-3 px-4 border-b border-text-muted/10">High-value settlements, irreversible operations</td>
               </tr>
               <tr>
                 <td class="text-text font-medium py-3 px-4">Failure behavior</td>
@@ -285,7 +312,7 @@
         <!-- Footnote -->
         <div class="space-y-2 text-text-muted text-xs md:text-sm leading-relaxed max-w-3xl">
           <p><strong class="text-text">k-deep</strong> waits for a fixed number of blocks with no formal safety guarantee.</p>
-          <p><strong class="text-text">FCR</strong> offers deterministic confirmation in ~13 seconds under normal network conditions — falling back to finality if conditions deteriorate.</p>
+          <p class="text-primary font-bold text-sm md:text-base"><strong>FCR</strong> offers deterministic confirmation in ~13 seconds under normal network conditions — falling back to finality if conditions deteriorate.</p>
           <p><strong class="text-text">Finality</strong> provides unconditional permanence backed by slashable stake, but takes ~13 minutes.</p>
         </div>
       </section>
@@ -299,26 +326,30 @@
           </p>
         </div>
 
-        <!-- Assumption 1: Synchrony -->
-        <div id="assumption-sync" class="space-y-6 scroll-mt-24">
-          <div class="space-y-2">
-            <h4 class="text-primary text-xl md:text-2xl font-bold">Assumption 1: Communication model (synchrony)</h4>
-            <p class="text-text-muted text-sm md:text-base max-w-3xl">
-              FCR requires attestations to arrive within the synchrony bound. If the network becomes asynchronous, FCR stalls and resets to the last finalized block.
-            </p>
+        <div class="grid md:grid-cols-2 gap-8 lg:gap-12">
+          <!-- Assumption 1: Synchrony -->
+          <div id="assumption-sync" class="space-y-6 scroll-mt-24">
+            <div class="space-y-2">
+              <div class="text-primary text-sm font-medium tracking-wider">ASSUMPTION 01</div>
+              <h4 class="text-primary text-xl md:text-2xl font-bold">Communication model (synchrony)</h4>
+              <p class="text-text-muted text-sm md:text-base">
+                FCR requires attestations to arrive within the synchrony bound. If the network becomes asynchronous, FCR stalls and resets to the last finalized block.
+              </p>
+            </div>
+            <div id="sim-async-container"></div>
           </div>
-          <div id="sim-async-container"></div>
-        </div>
 
-        <!-- Assumption 2: Adversarial threshold -->
-        <div id="assumption-adversary" class="space-y-6 scroll-mt-24">
-          <div class="space-y-2">
-            <h4 class="text-primary text-xl md:text-2xl font-bold">Assumption 2: Adversarial threshold (&lt;25%)</h4>
-            <p class="text-text-muted text-sm md:text-base max-w-3xl">
-              FCR requires less than 25% adversarial stake. If an adversary withholds votes, FCR cannot confirm — a liveness failure, not a safety failure.
-            </p>
+          <!-- Assumption 2: Adversarial threshold -->
+          <div id="assumption-adversary" class="space-y-6 scroll-mt-24">
+            <div class="space-y-2">
+              <div class="text-primary text-sm font-medium tracking-wider">ASSUMPTION 02</div>
+              <h4 class="text-primary text-xl md:text-2xl font-bold">Adversarial threshold (&lt;25%)</h4>
+              <p class="text-text-muted text-sm md:text-base">
+                FCR requires less than 25% adversarial stake. If an adversary withholds votes, FCR cannot confirm — a liveness failure, not a safety failure.
+              </p>
+            </div>
+            <div id="sim-adversary-container"></div>
           </div>
-          <div id="sim-adversary-container"></div>
         </div>
       </section>
 

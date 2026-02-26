@@ -32,6 +32,19 @@ html {
   --radius-full: 9999px;
 }
 
+/* Hamburger menu animation */
+#menu-toggle.menu-open .hamburger-line:nth-child(1) {
+  transform: translateY(4px) rotate(45deg);
+}
+
+#menu-toggle.menu-open .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+#menu-toggle.menu-open .hamburger-line:nth-child(3) {
+  transform: translateY(-4px) rotate(-45deg);
+}
+
 /* Scroll hint bounce animation */
 .scroll-hint {
   animation: bounce-down 2s ease-in-out infinite;

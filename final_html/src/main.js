@@ -124,11 +124,41 @@ function initCountUp() {
   els.forEach((el) => observer.observe(el))
 }
 
+// Mobile hamburger menu
+function handleMobileMenu() {
+  const toggle = document.getElementById('menu-toggle')
+  const menu = document.getElementById('mobile-menu')
+  if (!toggle || !menu) return
+
+  toggle.addEventListener('click', () => {
+    const isOpen = menu.classList.contains('flex')
+    if (isOpen) {
+      menu.classList.remove('flex')
+      menu.classList.add('hidden')
+      toggle.classList.remove('menu-open')
+    } else {
+      menu.classList.remove('hidden')
+      menu.classList.add('flex')
+      toggle.classList.add('menu-open')
+    }
+  })
+
+  // Close menu when a link is clicked
+  menu.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => {
+      menu.classList.remove('flex')
+      menu.classList.add('hidden')
+      toggle.classList.remove('menu-open')
+    })
+  })
+}
+
 // Run on load
 document.addEventListener('DOMContentLoaded', () => {
   handleStickyHeader()
   handleScrollSpy()
   initCountUp()
+  handleMobileMenu()
 
   // Main simulation: FCR vs Finality (positive case)
   initSimulation('sim-container', 'normal')
