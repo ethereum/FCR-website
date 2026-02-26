@@ -1,13 +1,14 @@
 /**
- * Block Simulation Animation — matches JSX reference
- * Tab 1: FCR vs Finality — two parallel chains
- * Tab 2: Async Failure — single chain with callout
- * Tab 3: >25% Adversary — single chain with vote dots + callout
+ * Block Simulation Animation
+ * Supports standalone single-scenario instances (no tabs)
+ * - Main simulation: FCR vs Finality (positive case)
+ * - Assumption 1: Async Failure
+ * - Assumption 2: >25% Adversary
  */
 
 const TICK_MS = 900
 const NUM_SLOTS = 10
-const MAX_TICKS = [14, 16, 16]
+const MAX_TICKS = { normal: 14, async: 16, adversary: 16 }
 
 // ─── Rendering helpers ───
 
@@ -120,7 +121,7 @@ function renderChain({ label, sublabel, badge, blocks, fcrAt, finAt, showVotes, 
   return html
 }
 
-// ─── Scenario logic (matches JSX reference) ───
+// ─── Scenario logic ───
 
 function mkBlocks(n) {
   return Array.from({ length: NUM_SLOTS }).map((_, i) =>
@@ -238,59 +239,57 @@ function computeAdversary(tick) {
   }
 }
 
-// ─── Main class ───
+// ─── Scenario definitions ───
 
-const SCENARIOS = [
-  { label: 'FCR vs Finality', desc: 'Normal conditions \u2014 FCR confirms in ~1 slot while finality takes ~2 epochs', compute: computeNormal, legend: ['proposed', 'confirmed', 'finalized'] },
-  { label: 'Async Failure', desc: 'Network asynchrony causes attestations to arrive late. FCR stalls, then resets to finalized.', compute: computeAsync, legend: ['proposed', 'confirmed', 'finalized', 'stale'] },
-  { label: '>25% Adversary', desc: 'Adversary withholds votes. FCR cannot confirm \u2014 liveness failure (not safety failure).', compute: computeAdversary, legend: ['proposed', 'confirmed', 'finalized', 'stale', 'adversary'] }
-]
+const SCENARIOS = {
+  normal: { label: 'FCR vs Finality', desc: 'Normal conditions \u2014 FCR confirms in ~1 slot while finality takes ~2 epochs', compute: computeNormal, legend: ['proposed', 'confirmed', 'finalized'], maxTicks: 14 },
+  async: { label: 'Async Failure', desc: 'Network asynchrony causes attestations to arrive late. FCR stalls, then resets to finalized.', compute: computeAsync, legend: ['proposed', 'confirmed', 'finalized', 'stale'], maxTicks: 16 },
+  adversary: { label: '>25% Adversary', desc: 'Adversary withholds votes. FCR cannot confirm \u2014 liveness failure (not safety failure).', compute: computeAdversary, legend: ['proposed', 'confirmed', 'finalized', 'stale', 'adversary'], maxTicks: 16 }
+}
+
+// ─── Standalone simulation class (no tabs) ───
 
 export class BlockSimulation {
-  constructor(container) {
+  constructor(container, scenarioKey) {
     this.container = container
-    this.tabIdx = 0
+    this.scenarioKey = scenarioKey || 'normal'
+    this.scenario = SCENARIOS[this.scenarioKey]
     this.tick = 0
     this.isPlaying = false
     this.animFrameId = null
     this.lastTickTime = 0
 
     this.render()
-    this.setTab(0)
+    this.updateDisplay()
   }
 
   render() {
     this.container.innerHTML = `
       <div class="space-y-5">
-        <div class="flex flex-wrap gap-1" id="sim-tabs"></div>
-        <p class="text-text-muted text-sm" id="sim-desc"></p>
+        <p class="text-text-muted text-sm" id="sim-desc-${this.scenarioKey}"></p>
         <div class="flex items-center gap-2">
-          <button class="border border-text/12 bg-white text-text text-xs font-semibold px-3.5 py-1.5 rounded-md cursor-pointer hover:bg-text/5 transition-colors" id="sim-restart">Restart</button>
-          <button class="border border-text/12 bg-white text-text text-xs font-semibold px-3.5 py-1.5 rounded-md cursor-pointer hover:bg-text/5 transition-colors" id="sim-play">Play</button>
+          <button class="border border-text/12 bg-white text-text text-xs font-semibold px-3.5 py-1.5 rounded-md cursor-pointer hover:bg-text/5 transition-colors" id="sim-restart-${this.scenarioKey}">Restart</button>
+          <button class="border border-text/12 bg-white text-text text-xs font-semibold px-3.5 py-1.5 rounded-md cursor-pointer hover:bg-text/5 transition-colors" id="sim-play-${this.scenarioKey}">Play</button>
         </div>
-        <div class="flex flex-wrap gap-5 text-[11px] text-text-muted" id="sim-legend"></div>
-        <div id="sim-viewport" style="min-height:280px;overflow:hidden"></div>
+        <div class="flex flex-wrap gap-5 text-[11px] text-text-muted" id="sim-legend-${this.scenarioKey}"></div>
+        <div id="sim-viewport-${this.scenarioKey}" style="min-height:280px;overflow:hidden"></div>
         <div class="flex items-center gap-3">
-          <span class="text-[10px] text-text-muted font-semibold" style="width:60px" id="sim-slot">Slot 0</span>
+          <span class="text-[10px] text-text-muted font-semibold" style="width:60px" id="sim-slot-${this.scenarioKey}">Slot 0</span>
           <div class="flex-1 h-1 rounded-sm" style="background:rgba(74,74,74,0.08)">
-            <div class="h-1 rounded-sm bg-primary transition-[width] duration-400" id="sim-progress" style="width:0%"></div>
+            <div class="h-1 rounded-sm bg-primary transition-[width] duration-400" id="sim-progress-${this.scenarioKey}" style="width:0%"></div>
           </div>
         </div>
       </div>
     `
 
-    this.container.querySelector('#sim-play').addEventListener('click', () => this.isPlaying ? this.pause() : this.play())
-    this.container.querySelector('#sim-restart').addEventListener('click', () => this.restart())
-  }
+    this.container.querySelector(`#sim-play-${this.scenarioKey}`).addEventListener('click', () => this.isPlaying ? this.pause() : this.play())
+    this.container.querySelector(`#sim-restart-${this.scenarioKey}`).addEventListener('click', () => this.restart())
 
-  renderTabs() {
-    const el = this.container.querySelector('#sim-tabs')
-    el.innerHTML = SCENARIOS.map((s, i) =>
-      `<button class="sim-tab ${i === this.tabIdx ? 'active' : ''}" data-idx="${i}">${s.label}</button>`
-    ).join('')
-    el.querySelectorAll('.sim-tab').forEach(btn => {
-      btn.addEventListener('click', () => this.setTab(parseInt(btn.dataset.idx)))
-    })
+    // Set description
+    this.container.querySelector(`#sim-desc-${this.scenarioKey}`).textContent = this.scenario.desc
+
+    // Render legend
+    this.renderLegend()
   }
 
   renderLegend() {
@@ -301,36 +300,25 @@ export class BlockSimulation {
       stale: { color: '#ccc', label: 'Stale (reset)', border: '2px dashed #aaa', opacity: '0.5' },
       adversary: { color: '#cc3333', label: 'Adversarial votes' }
     }
-    const items = SCENARIOS[this.tabIdx].legend
-    this.container.querySelector('#sim-legend').innerHTML = items.map(k => {
+    const items = this.scenario.legend
+    this.container.querySelector(`#sim-legend-${this.scenarioKey}`).innerHTML = items.map(k => {
       const d = defs[k]
       const style = `width:14px;height:14px;border-radius:4px;background:${d.color};${d.border ? 'border:' + d.border + ';' : ''}${d.opacity ? 'opacity:' + d.opacity + ';' : ''}`
       return `<div class="flex items-center gap-1.5"><div style="${style}"></div><span>${d.label}</span></div>`
     }).join('')
   }
 
-  setTab(idx) {
-    this.tabIdx = idx
-    this.tick = 0
-    this.isPlaying = false
-    this.container.querySelector('#sim-play').textContent = 'Play'
-    this.container.querySelector('#sim-desc').textContent = SCENARIOS[idx].desc
-    this.renderTabs()
-    this.renderLegend()
-    this.updateDisplay()
-  }
-
   play() {
-    if (this.tick >= MAX_TICKS[this.tabIdx]) this.tick = 0
+    if (this.tick >= this.scenario.maxTicks) this.tick = 0
     this.isPlaying = true
-    this.container.querySelector('#sim-play').textContent = 'Pause'
+    this.container.querySelector(`#sim-play-${this.scenarioKey}`).textContent = 'Pause'
     this.lastTickTime = performance.now()
     this.animFrameId = requestAnimationFrame(t => this.loop(t))
   }
 
   pause() {
     this.isPlaying = false
-    this.container.querySelector('#sim-play').textContent = 'Play'
+    this.container.querySelector(`#sim-play-${this.scenarioKey}`).textContent = 'Play'
     if (this.animFrameId) { cancelAnimationFrame(this.animFrameId); this.animFrameId = null }
   }
 
@@ -341,16 +329,15 @@ export class BlockSimulation {
     if (now - this.lastTickTime >= TICK_MS) {
       this.lastTickTime = now
       this.tick++
-      if (this.tick > MAX_TICKS[this.tabIdx]) { this.tick = MAX_TICKS[this.tabIdx]; this.pause(); return }
+      if (this.tick > this.scenario.maxTicks) { this.tick = this.scenario.maxTicks; this.pause(); return }
       this.updateDisplay()
     }
     this.animFrameId = requestAnimationFrame(t => this.loop(t))
   }
 
   updateDisplay() {
-    const scenario = SCENARIOS[this.tabIdx]
-    const state = scenario.compute(this.tick)
-    const viewport = this.container.querySelector('#sim-viewport')
+    const state = this.scenario.compute(this.tick)
+    const viewport = this.container.querySelector(`#sim-viewport-${this.scenarioKey}`)
 
     let html = ''
     if (state.type === 'dual') {
@@ -362,9 +349,9 @@ export class BlockSimulation {
     if (state.callout) html += renderCallout(state.callout.text, state.callout.type)
     viewport.innerHTML = html
 
-    const max = MAX_TICKS[this.tabIdx]
+    const max = this.scenario.maxTicks
     const pct = (Math.min(this.tick, max) / max) * 100
-    this.container.querySelector('#sim-progress').style.width = `${pct}%`
-    this.container.querySelector('#sim-slot').textContent = `Slot ${Math.min(this.tick, NUM_SLOTS)}`
+    this.container.querySelector(`#sim-progress-${this.scenarioKey}`).style.width = `${pct}%`
+    this.container.querySelector(`#sim-slot-${this.scenarioKey}`).textContent = `Slot ${Math.min(this.tick, NUM_SLOTS)}`
   }
 }

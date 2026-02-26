@@ -28,6 +28,34 @@
   --radius-full: 9999px;
 }
 
+/* Hero parallax — hero stays in place, content scrolls over */
+#overview {
+  position: sticky;
+  top: 0;
+  z-index: 0;
+}
+
+#scroll-content {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.08);
+  padding: 0 1.5rem;
+}
+
+@media (min-width: 768px) {
+  #scroll-content { padding: 0 3rem; }
+}
+
+@media (min-width: 1024px) {
+  #scroll-content { padding: 0 4rem; }
+}
+
+/* Header loses rounded top when sticky/scrolled */
+#header.is-sticky #header-inner {
+  border-radius: 0;
+  border-bottom-color: rgba(240, 95, 54, 0.2);
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
