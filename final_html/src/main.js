@@ -68,7 +68,7 @@ function handleScrollSpy() {
   sections.forEach((section) => observer.observe(section))
 }
 
-// Lazy-init simulation when it scrolls into view
+// Lazy-init simulation when it scrolls into view, auto-play after delay
 function initSimulation(containerId, scenarioKey) {
   const container = document.getElementById(containerId)
   if (!container) return
@@ -77,7 +77,8 @@ function initSimulation(containerId, scenarioKey) {
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          new BlockSimulation(container, scenarioKey)
+          const sim = new BlockSimulation(container, scenarioKey)
+          setTimeout(() => sim.play(), 500)
           observer.disconnect()
         }
       })

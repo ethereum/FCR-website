@@ -150,105 +150,727 @@ details[open] summary .faq-icon {
 }
 
 /* Simulation styles */
-.sim-tab {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 2px solid transparent;
-  background: transparent;
-  color: var(--color-text-muted);
-}
 
-.sim-tab:hover {
-  color: var(--color-text);
-}
-
-.sim-tab.active {
-  background: var(--color-primary);
-  color: var(--color-background);
-  border-color: var(--color-primary);
-}
-
+/* Shared block styles (async/adversary scenarios) */
 .sim-block {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.625rem;
+  font-size: 11px;
   font-weight: 700;
-  transition: all 0.4s ease;
+  transition: background 0.4s ease, transform 0.3s ease, opacity 0.3s ease;
   flex-shrink: 0;
   position: relative;
-}
-
-.sim-block.proposed {
-  background: #d1d5db;
-  color: #6b7280;
-}
-
-.sim-block.confirmed {
-  background: var(--color-primary);
   color: white;
 }
 
-.sim-block.finalized {
-  background: var(--color-green);
-  color: white;
+.sim-block.empty { background: rgba(74,74,74,0.08); }
+.sim-block.proposed { background: #737373; }
+.sim-block.confirmed { background: var(--color-primary); }
+.sim-block.finalized { background: #22aa44; }
+.sim-block.stale { background: transparent; border: 2px dashed #aaa; color: #9ca3af; opacity: 0.45; }
+
+/* ─── Progress-bar chain for normal scenario ─── */
+.sim-bar-wrap {
+  position: relative;
+  margin-bottom: 12px;
+  padding-top: 36px;
 }
 
-.sim-block.waiting {
-  background: #d1d5db;
-  color: #6b7280;
-}
-
-.sim-block.stale {
-  background: transparent;
-  border: 2px dashed #d1d5db;
-  color: #9ca3af;
-}
-
-.sim-vote-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  transition: background 0.3s ease;
-}
-
-.sim-vote-dot.honest {
-  background: var(--color-green);
-}
-
-.sim-vote-dot.adversary {
-  background: var(--color-red);
-}
-
-.sim-vote-dot.pending {
-  background: #d1d5db;
-}
-
-.sim-progress {
-  height: 4px;
-  background: var(--color-text-muted);
-  border-radius: 2px;
+.sim-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 36px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
-.sim-progress-bar {
-  height: 100%;
-  background: var(--color-primary);
-  transition: width 0.3s ease;
+.sim-bar-seg {
+  flex: 1;
+  min-width: 0;
+  transition: background 0.3s ease;
+}
+
+.sim-bar-seg.empty { background: rgba(74,74,74,0.08); }
+.sim-bar-seg.proposed { background: #737373; }
+.sim-bar-seg.confirmed { background: var(--color-primary); }
+.sim-bar-seg.finalized { background: #22aa44; }
+
+/* Epoch divider */
+.sim-epoch-divider {
+  width: 3px;
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.15);
   border-radius: 2px;
 }
 
+/* Epoch labels below bar */
+.sim-bar-labels {
+  display: flex;
+  margin-top: 6px;
+}
+
+.sim-bar-epoch-label {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #737373;
+}
+
+/* Confirmation pulse */
+@keyframes confirmPulse {
+  0% { box-shadow: inset 0 0 0 0 rgba(240, 95, 54, 0.6); }
+  50% { box-shadow: inset 0 0 8px 2px rgba(240, 95, 54, 0.3); }
+  100% { box-shadow: inset 0 0 0 0 rgba(240, 95, 54, 0); }
+}
+
+.sim-bar-seg.confirm-pulse,
+.sim-block.confirm-pulse {
+  animation: confirmPulse 0.5s ease-out;
+}
+
+/* ─── Moving head bubble ─── */
+.sim-head-bubble {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+  transition: left 0.18s ease-out;
+}
+
+/* Clamp bubble to not overflow container edges */
+.sim-bar-wrap { overflow: visible; }
+
+.sim-head-bubble-text {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: #333;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.sim-head-bubble-arrow {
+  width: 0;
+  height: 0;
+  margin: 0 auto;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #333;
+}
+
+/* ─── Confetti (explodes from block 9) ─── */
+.sim-confetti {
+  position: absolute;
+  top: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 10;
+}
+
+.sim-confetti-piece {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 2px;
+  animation: confettiBurst 1.3s ease-out forwards;
+}
+
+@keyframes confettiBurst {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  50% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.3); }
+}
+
+/* Pointer labels */
+.sim-ptr { text-align: center; }
+
+.sim-ptr-label {
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  margin-bottom: 2px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.04);
+}
+
+/* Blocks row (async/adversary) */
+.sim-blocks-row { display: flex; gap: 12px; }
+.sim-ptr-row { display: flex; gap: 12px; height: 28px; margin-bottom: 2px; }
+.sim-ptr-cell { width: 52px; display: flex; justify-content: center; flex-shrink: 0; }
+.sim-slot-numbers { display: flex; gap: 12px; margin-bottom: 4px; }
+.sim-slot-num { width: 52px; text-align: center; font-size: 9px; color: #737373; font-weight: 600; flex-shrink: 0; }
+
+/* Chain container (async/adversary) */
+.sim-chain { margin-bottom: 16px; overflow-x: auto; }
+.sim-chain-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.sim-chain-label { font-size: 12px; font-weight: 700; color: #000; }
+.sim-chain-sublabel { font-size: 10px; color: #737373; }
+
+/* Badges */
+.sim-badge { font-size: 10px; font-weight: 700; letter-spacing: 0.4px; padding: 3px 10px; border-radius: 4px; }
+.sim-badge-ok { background: rgba(34,170,68,0.1); color: #22aa44; }
+.sim-badge-warn { background: rgba(204,51,51,0.08); color: #cc3333; }
+.sim-badge-info { background: rgba(74,74,74,0.06); color: #737373; }
+
+/* Callouts */
+.sim-callout { padding: 10px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; font-weight: 600; line-height: 1.5; }
+.sim-callout-ok { background: rgba(34,170,68,0.05); border: 1px solid rgba(34,170,68,0.12); color: #22aa44; }
+.sim-callout-warn { background: rgba(204,51,51,0.05); border: 1px solid rgba(204,51,51,0.12); color: #cc3333; }
+
+/* Play/pause/restart icon buttons — centered below animation */
+.sim-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.sim-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: white;
+  color: #737373;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.sim-icon-btn:hover {
+  background: rgba(0,0,0,0.04);
+  color: #000;
+}
+
+.sim-icon-btn-play {
+  width: 44px;
+  height: 44px;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.sim-icon-btn-play:hover {
+  background: rgba(240,95,54,0.06);
+}
+
+/* Start simulation button */
+.sim-btn-start {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 20px;
+  border: 2px solid var(--color-primary);
+  background: white;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sim-btn-start:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.sim-btn-start svg {
+  flex-shrink: 0;
+}
+
+/* Small text button (replay, etc) */
+.sim-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: white;
+  color: #737373;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sim-btn-sm:hover {
+  background: rgba(0,0,0,0.04);
+  color: #000;
+}
+
+.sim-btn-sm svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}
+
+/* Summary replay button positioning */
+.sim-summary-replay {
+  margin-top: 10px;
+}
+
+/* Tooltip bubble */
+.sim-tooltip {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  animation: tooltipFadeIn 0.3s ease-out;
+}
+
+.sim-tooltip-ok {
+  background: rgba(240,95,54,0.08);
+  color: var(--color-primary);
+  border: 1px solid rgba(240,95,54,0.15);
+}
+
+.sim-tooltip-fin {
+  background: rgba(34,170,68,0.08);
+  color: #22aa44;
+  border: 1px solid rgba(34,170,68,0.15);
+}
+
+@keyframes tooltipFadeIn {
+  0% { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Viewport */
+.sim-viewport { min-height: 80px; overflow: visible; }
+.sim-viewport-normal { min-height: auto; }
+
+/* ─── Unified chain (normal scenario) ─── */
+.sim-unified {
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(74,74,74,0.03);
+  border: 1px solid rgba(74,74,74,0.08);
+  overflow: visible;
+}
+
+.sim-unified-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.sim-unified-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #000;
+}
+
+.sim-unified-time {
+  font-size: 13px;
+  font-weight: 600;
+  color: #737373;
+  background: rgba(74,74,74,0.06);
+  padding: 3px 12px;
+  border-radius: 12px;
+}
+
+/* Status pills below grid */
+.sim-unified-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.sim-status-pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 20px;
+  animation: tooltipFadeIn 0.3s ease-out;
+}
+
+.sim-status-confirmed {
+  background: rgba(240,95,54,0.1);
+  color: var(--color-primary);
+  animation: confirmedPulse 2s ease-in-out infinite;
+}
+
+@keyframes confirmedPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.sim-status-finalized {
+  background: rgba(34,170,68,0.1);
+  color: #22aa44;
+}
+
+.sim-status-waiting {
+  background: rgba(74,74,74,0.06);
+  color: #737373;
+  animation: waitingPulse 2s ease-in-out infinite;
+}
+
+@keyframes waitingPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ─── Dual-bar layout ─── */
+.sim-dual-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.sim-dual-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #737373;
+  width: 80px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.sim-dual-bar-wrap {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  padding-top: 32px;
+}
+
+.sim-dual-counter {
+  font-size: 11px;
+  font-weight: 700;
+  color: #737373;
+  width: 110px;
+  flex-shrink: 0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.sim-dual-gap {
+  height: 12px;
+  margin: 12px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+/* Status pills row under each bar (legacy side layout) */
+.sim-dual-pills {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  margin-left: 90px;
+  flex-wrap: wrap;
+}
+
+/* ─── Centered label layout for main animation ─── */
+.sim-dual-section {
+  position: relative;
+}
+
+.sim-dual-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.sim-dual-section-label {
+  font-size: 18px;
+  font-weight: 900;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sim-dual-section-label-fcr {
+  color: var(--color-primary);
+}
+
+.sim-dual-section-counter {
+  font-size: 11px;
+  font-weight: 700;
+  color: #737373;
+  background: rgba(74,74,74,0.06);
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+
+.sim-dual-pills-center {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Green tooltip bubble for head-of-chain */
+.sim-head-bubble-green .sim-head-bubble-text {
+  background: #22aa44;
+}
+
+.sim-head-bubble-green .sim-head-bubble-arrow {
+  border-top-color: #22aa44;
+}
+
+/* Red tooltip bubble for failure */
+.sim-head-bubble-red .sim-head-bubble-text {
+  background: #cc3333;
+}
+
+.sim-head-bubble-red .sim-head-bubble-arrow {
+  border-top-color: #cc3333;
+}
+
+/* Green confirmed tooltip bubble (top bar in main animation) */
+.sim-head-bubble-confirmed .sim-head-bubble-text {
+  background: #22aa44;
+}
+
+.sim-head-bubble-confirmed .sim-head-bubble-arrow {
+  border-top-color: #22aa44;
+}
+
+/* Gray tooltip bubble (bottom bar "still waiting" in main animation) */
+.sim-head-bubble-gray .sim-head-bubble-text {
+  background: #9ca3af;
+}
+
+.sim-head-bubble-gray .sim-head-bubble-arrow {
+  border-top-color: #9ca3af;
+}
+
+/* Red dashed fallback line connecting bars at failure point */
+.sim-fallback-line {
+  position: absolute;
+  border-left: 2px dashed #cc3333;
+  z-index: 6;
+  pointer-events: none;
+}
+
+/* Fallback indicator (arrow + warning between bars) */
+.sim-fallback-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 90px;
+  margin-top: 6px;
+}
+
+.sim-fallback-arrow {
+  font-size: 18px;
+  font-weight: 800;
+  color: #cc3333;
+  line-height: 1;
+  animation: arrowBounce 0.8s ease-in-out infinite;
+}
+
+.sim-fallback-arrow-done {
+  font-size: 11px;
+  font-weight: 700;
+  color: #22aa44;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: rgba(34,170,68,0.08);
+}
+
+@keyframes arrowBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+/* Warning badge for assumption failures */
+.sim-warning-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: rgba(204,51,51,0.08);
+  color: #cc3333;
+  animation: tooltipFadeIn 0.3s ease-out;
+  margin-left: 90px;
+  margin-top: 4px;
+}
+
+/* ─── Elapsed time bar (during animation) ─── */
+.sim-bottom-area {
+  min-height: 80px;
+}
+
+.sim-elapsed-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  padding: 12px 0 4px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.sim-elapsed-controls {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 4px;
+}
+
+/* Inline controls (restart + pause) */
+.sim-controls-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Small icon buttons for running state */
+.sim-icon-btn-sm {
+  width: 30px;
+  height: 30px;
+}
+
+.sim-icon-btn-sm svg {
+  width: 12px;
+  height: 12px;
+}
+
+.sim-elapsed-time {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Summary highlight (end of main animation) ─── */
+.sim-summary-highlight {
+  margin-top: 16px;
+  padding: 20px 0;
+  text-align: center;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  animation: summaryFadeIn 0.6s ease-out;
+}
+
+.sim-summary-highlight-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.sim-summary-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sim-summary-value {
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.sim-summary-value-fcr {
+  color: var(--color-primary);
+}
+
+.sim-summary-value-fin {
+  color: #737373;
+}
+
+.sim-summary-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #737373;
+}
+
+.sim-summary-vs {
+  font-size: 14px;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.sim-summary-tagline {
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+}
+
+.sim-summary-tagline strong {
+  color: var(--color-primary);
+}
+
+@keyframes summaryFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Responsive ─── */
 @media (max-width: 768px) {
-  .sim-block {
-    width: 36px;
-    height: 36px;
-    font-size: 0.5rem;
+  .sim-unified { padding: 14px; }
+
+  .sim-bar { height: 28px; gap: 1px; }
+
+  .sim-dual-label {
+    width: 60px;
+    font-size: 10px;
+  }
+
+  .sim-dual-counter {
+    width: 80px;
+    font-size: 10px;
+  }
+
+  .sim-dual-pills {
+    margin-left: 70px;
+  }
+
+  .sim-warning-badge {
+    margin-left: 70px;
+  }
+
+  .sim-fallback-indicator {
+    margin-left: 70px;
+  }
+
+  .sim-summary-highlight {
+    padding: 16px 14px;
+  }
+
+  .sim-summary-highlight-inner {
+    gap: 14px;
+  }
+
+  .sim-summary-value {
+    font-size: 28px;
+  }
+
+  .sim-summary-tagline {
+    font-size: 14px;
   }
 }

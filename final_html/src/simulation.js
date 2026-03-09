@@ -1,253 +1,459 @@
 /**
- * Block Simulation Animation
- * Supports standalone single-scenario instances (no tabs)
- * - Main simulation: FCR vs Finality (positive case)
- * - Assumption 1: Async Failure
- * - Assumption 2: >25% Adversary
+ * Block Simulation Animation — Dual-Bar Format
+ * - Main simulation: Two bars (With FCR vs Without FCR), 64 blocks
+ * - Assumption 1: FCR Client vs Head of Chain — async failure + fallback
+ * - Assumption 2: FCR Client vs Head of Chain — adversary failure + fallback
  */
 
-const TICK_MS = 900
-const NUM_SLOTS = 10
-const MAX_TICKS = { normal: 14, async: 16, adversary: 16 }
+const NORMAL_TOTAL_SLOTS = 64
+const NORMAL_MAX_TICKS = 68   // 64 + 4 buffer for finalization snap
+const NORMAL_TICK_SPEED = 200 // ms per tick
 
-// ─── Rendering helpers ───
+const ASSUMPTION_TOTAL_SLOTS = 40
+const ASSUMPTION_TICK_SPEED = 700
 
-function renderPtr(label, color) {
-  return `<div style="text-align:center">
-    <div style="font-size:8px;font-weight:700;letter-spacing:0.6px;color:${color};white-space:nowrap;margin-bottom:2px">${label}</div>
-    <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid ${color};margin:0 auto"></div>
-  </div>`
-}
+const SLOTS_PER_EPOCH = 32
 
-function renderBlock(status, label) {
-  const colors = { empty: 'rgba(74,74,74,0.08)', proposed: '#737373', confirmed: '#F05F36', finalized: '#22aa44', stale: '#ccc' }
-  if (status === 'empty') {
-    return `<div style="width:40px;height:40px;border-radius:6px;background:${colors.empty};flex-shrink:0"></div>`
-  }
-  const border = status === 'stale' ? 'border:2px dashed #aaa;' : ''
-  const opacity = status === 'stale' ? 'opacity:0.45;' : ''
-  return `<div style="width:40px;height:40px;border-radius:6px;background:${colors[status] || '#737373'};${border}${opacity}display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;transition:all 0.4s ease">${label}</div>`
-}
+const TICK_SPEEDS = { normal: NORMAL_TICK_SPEED, async: ASSUMPTION_TICK_SPEED, adversary: ASSUMPTION_TICK_SPEED }
 
-function renderDots(filled, total, bad) {
-  const color = bad ? '#cc3333' : '#F05F36'
-  let html = '<div style="display:flex;gap:2px;justify-content:center;margin-top:6px">'
-  for (let i = 0; i < total; i++) {
-    const bg = i < filled ? color : 'rgba(74,74,74,0.12)'
-    html += `<div style="width:6px;height:6px;border-radius:3px;background:${bg};transition:background 0.3s"></div>`
-  }
-  html += '</div>'
-  return html
+// SVG icons
+const ICON_PLAY = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>'
+const ICON_PAUSE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>'
+const ICON_RESTART = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>'
+
+// ─── Helpers ───
+
+function formatTime(seconds) {
+  if (seconds < 60) return `~${String(seconds).padStart(2, '0')}s`
+  const min = Math.floor(seconds / 60)
+  const sec = seconds % 60
+  return `~${String(min).padStart(2, '0')}m ${String(sec).padStart(2, '0')}s`
 }
 
 function renderBadge(text, type) {
-  const styles = {
-    ok: 'background:rgba(34,170,68,0.1);color:#22aa44',
-    warn: 'background:rgba(204,51,51,0.08);color:#cc3333',
-    info: 'background:rgba(74,74,74,0.06);color:#737373'
-  }
-  return `<span style="font-size:10px;font-weight:700;letter-spacing:0.4px;padding:3px 10px;border-radius:4px;${styles[type] || styles.info}">${text}</span>`
+  const cls = type === 'ok' ? 'sim-badge-ok' : type === 'warn' ? 'sim-badge-warn' : 'sim-badge-info'
+  return `<span class="sim-badge ${cls}">${text}</span>`
 }
 
 function renderCallout(text, type) {
   if (!text) return ''
-  const isWarn = type === 'warn'
-  const bg = isWarn ? 'rgba(204,51,51,0.05)' : 'rgba(34,170,68,0.05)'
-  const border = isWarn ? '1px solid rgba(204,51,51,0.12)' : '1px solid rgba(34,170,68,0.12)'
-  const color = isWarn ? '#cc3333' : '#22aa44'
-  return `<div style="padding:10px 16px;border-radius:8px;margin-bottom:20px;background:${bg};border:${border}">
-    <span style="font-size:12px;font-weight:600;color:${color};line-height:1.5">${text}</span>
+  const cls = type === 'warn' ? 'sim-callout-warn' : 'sim-callout-ok'
+  return `<div class="sim-callout ${cls}"><span>${text}</span></div>`
+}
+
+// ─── Main Simulation: Dual-bar (With FCR / Without FCR) ───
+
+function computeNormal(tick) {
+  const N = NORMAL_TOTAL_SLOTS
+  const headBlock = tick > 0 ? Math.min(tick - 1, N - 1) : null
+  const proposed = Math.min(tick, N)
+  const finalizationTick = N + 3 // finalize after all blocks proposed + small lag
+
+  // Top bar (With FCR): confirmed as head passes
+  const fcrBar = Array.from({ length: N }).map((_, i) => {
+    if (i >= proposed) return { status: 'empty' }
+    if (tick >= finalizationTick) return { status: 'finalized' }
+    if (headBlock !== null && i <= headBlock) return { status: 'confirmed' }
+    return { status: 'proposed' }
+  })
+
+  // Bottom bar (Without FCR): proposed (gray) until finalization, then all green
+  const finBar = Array.from({ length: N }).map((_, i) => {
+    if (i >= proposed) return { status: 'empty' }
+    if (tick >= finalizationTick) return { status: 'finalized' }
+    return { status: 'proposed' }
+  })
+
+  const fcrConfirmed = headBlock !== null ? headBlock + 1 : 0
+  const allFinalized = tick >= finalizationTick
+  const finConfirmed = allFinalized ? N : 0
+
+  const elapsedSec = Math.min(tick, N) * 12
+  const elapsedText = tick > 0 ? formatTime(elapsedSec) : ''
+
+  return {
+    type: 'normal-dual',
+    fcrBar,
+    finBar,
+    headBlock,
+    elapsedText,
+    fcrConfirmed,
+    finConfirmed,
+    allFinalized,
+    tick
+  }
+}
+
+function renderControls(controls) {
+  const { scenarioKey, isPlaying, tick, maxTicks } = controls
+  const playIcon = isPlaying ? ICON_PAUSE : ICON_PLAY
+
+  if (tick === 0) {
+    return `<button class="sim-btn-start" id="sim-play-${scenarioKey}">${playIcon}<span>Start simulation</span></button>`
+  }
+  if (tick >= maxTicks) {
+    return `<button class="sim-btn-sm" id="sim-play-${scenarioKey}">${ICON_RESTART}<span>Replay</span></button>`
+  }
+  // Running/paused: compact controls on the right
+  return `<div class="sim-controls-inline">
+    <button class="sim-icon-btn sim-icon-btn-sm" id="sim-restart-${scenarioKey}" title="Restart">${ICON_RESTART}</button>
+    <button class="sim-icon-btn sim-icon-btn-sm" id="sim-play-${scenarioKey}" title="${isPlaying ? 'Pause' : 'Resume'}">${playIcon}</button>
   </div>`
 }
 
-function renderChain({ label, sublabel, badge, blocks, fcrAt, finAt, showVotes, votes }) {
-  const slotW = 64
-  const blockH = 40
-  const gap = slotW - blockH
+function renderNormalChain(state, controls) {
+  const { fcrBar, finBar, headBlock, elapsedText, fcrConfirmed, finConfirmed, allFinalized, tick } = state
+  const N = NORMAL_TOTAL_SLOTS
 
-  let html = `<div style="margin-bottom:28px">`
+  let html = '<div class="sim-unified">'
 
-  // Label row
-  html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-    <span style="font-size:13px;font-weight:700;color:#000">${label}</span>
-    ${sublabel ? `<span style="font-size:11px;color:#737373">${sublabel}</span>` : ''}
-    ${badge ? renderBadge(badge.text, badge.type) : ''}
-  </div>`
+  // Header
+  html += '<div class="sim-unified-header">'
+  html += '<span class="sim-unified-title">Ethereum Block Chain</span>'
+  html += '</div>'
 
-  // Slot numbers
-  html += `<div style="display:flex;gap:${gap}px;margin-left:4px;margin-bottom:4px">`
-  for (let i = 0; i < blocks.length; i++) {
-    html += `<div style="width:${blockH}px;text-align:center;font-size:9px;color:#737373;font-weight:600">${i}</div>`
+  // ── Top bar: With FCR ──
+  html += '<div class="sim-dual-section">'
+  html += `<div class="sim-dual-section-header"><span class="sim-dual-section-label sim-dual-section-label-fcr">With FCR</span><span class="sim-dual-section-counter">confirmed: ${fcrConfirmed}</span></div>`
+  html += '<div class="sim-dual-bar-wrap">'
+
+  // Head bubble on top bar (green = confirmed, green = finalized)
+  if (headBlock !== null && headBlock >= 0) {
+    const pct = Math.min(((headBlock + 0.5) / N) * 100, 98)
+    const elapsedSec = (headBlock + 1) * 12
+    const label = allFinalized ? 'Finalized' : 'Confirmed'
+    const bubbleClass = allFinalized ? 'sim-head-bubble sim-head-bubble-green' : 'sim-head-bubble sim-head-bubble-confirmed'
+    html += `<div class="${bubbleClass}" style="left:${pct}%">`
+    html += `<span class="sim-head-bubble-text">Block ${headBlock + 1} · ${formatTime(elapsedSec)} · ${label}</span>`
+    html += '<div class="sim-head-bubble-arrow"></div>'
+    html += '</div>'
+  }
+
+  html += '<div class="sim-bar">'
+  for (let i = 0; i < SLOTS_PER_EPOCH && i < fcrBar.length; i++) {
+    html += `<div class="sim-bar-seg ${fcrBar[i].status}"></div>`
+  }
+  html += '<div class="sim-epoch-divider"></div>'
+  for (let i = SLOTS_PER_EPOCH; i < SLOTS_PER_EPOCH * 2 && i < fcrBar.length; i++) {
+    html += `<div class="sim-bar-seg ${fcrBar[i].status}"></div>`
   }
   html += '</div>'
 
-  // FCR pointer row (above blocks)
-  html += `<div style="display:flex;gap:${gap}px;margin-left:4px;height:20px;margin-bottom:2px">`
-  for (let i = 0; i < blocks.length; i++) {
-    html += `<div style="width:${blockH}px;display:flex;justify-content:center">`
-    if (i === fcrAt) html += renderPtr('CONFIRMED', '#F05F36')
+  html += '<div class="sim-bar-labels">'
+  html += '<span class="sim-bar-epoch-label">Epoch 1</span>'
+  html += '<span class="sim-bar-epoch-label">Epoch 2</span>'
+  html += '</div>'
+
+  html += '</div>' // .sim-dual-bar-wrap
+
+  // Status pills
+  html += '<div class="sim-dual-pills-center">'
+  if (fcrConfirmed > 0 && !allFinalized) {
+    html += '<span class="sim-status-pill sim-status-confirmed">FCR Confirmed ~13s</span>'
+    html += '<span class="sim-status-pill sim-status-waiting">Finality: waiting...</span>'
+  } else if (allFinalized) {
+    html += '<span class="sim-status-pill sim-status-confirmed">FCR Confirmed ~13s</span>'
+    html += '<span class="sim-status-pill sim-status-finalized">Finalized ~13m</span>'
+  }
+  html += '</div>'
+  html += '</div>' // .sim-dual-section
+
+  // Gap between bars
+  html += '<div class="sim-dual-gap"></div>'
+
+  // ── Bottom bar: Without FCR ──
+  html += '<div class="sim-dual-section">'
+  html += `<div class="sim-dual-section-header"><span class="sim-dual-section-label">Without FCR</span><span class="sim-dual-section-counter">confirmed: ${finConfirmed}</span></div>`
+  html += '<div class="sim-dual-bar-wrap">'
+
+  // Head bubble on bottom bar (gray = still waiting, green = finalized)
+  if (headBlock !== null && headBlock >= 0) {
+    const pct = Math.min(((headBlock + 0.5) / N) * 100, 98)
+    const elapsedSec = (headBlock + 1) * 12
+    const label = allFinalized ? 'Finalized' : 'Still waiting...'
+    const bubbleClass = allFinalized ? 'sim-head-bubble sim-head-bubble-green' : 'sim-head-bubble sim-head-bubble-gray'
+    html += `<div class="${bubbleClass}" style="left:${pct}%">`
+    html += `<span class="sim-head-bubble-text">Block ${headBlock + 1} · ${formatTime(elapsedSec)} · ${label}</span>`
+    html += '<div class="sim-head-bubble-arrow"></div>'
+    html += '</div>'
+  }
+
+  html += '<div class="sim-bar">'
+  for (let i = 0; i < SLOTS_PER_EPOCH && i < finBar.length; i++) {
+    html += `<div class="sim-bar-seg ${finBar[i].status}"></div>`
+  }
+  html += '<div class="sim-epoch-divider"></div>'
+  for (let i = SLOTS_PER_EPOCH; i < SLOTS_PER_EPOCH * 2 && i < finBar.length; i++) {
+    html += `<div class="sim-bar-seg ${finBar[i].status}"></div>`
+  }
+  html += '</div>'
+
+  html += '<div class="sim-bar-labels">'
+  html += '<span class="sim-bar-epoch-label">Epoch 1</span>'
+  html += '<span class="sim-bar-epoch-label">Epoch 2</span>'
+  html += '</div>'
+
+  html += '</div>' // .sim-dual-bar-wrap
+
+  // Status pills
+  html += '<div class="sim-dual-pills-center">'
+  if (!allFinalized) {
+    html += '<span class="sim-status-pill sim-status-waiting">Finality: waiting...</span>'
+  } else {
+    html += '<span class="sim-status-pill sim-status-finalized">Finalized ~13m</span>'
+  }
+  html += '</div>'
+  html += '</div>' // .sim-dual-section
+
+  // Bottom time / summary area (inside the box)
+  html += '<div class="sim-bottom-area">'
+  if (allFinalized && tick >= NORMAL_MAX_TICKS - 2) {
+    html += '<div class="sim-summary-highlight">'
+    html += '<div class="sim-summary-highlight-inner">'
+    html += '<div class="sim-summary-stat"><span class="sim-summary-value sim-summary-value-fcr">~13s</span><span class="sim-summary-label">With FCR (1 slot)</span></div>'
+    html += '<div class="sim-summary-vs">vs</div>'
+    html += '<div class="sim-summary-stat"><span class="sim-summary-value sim-summary-value-fin">~13m</span><span class="sim-summary-label">Without FCR (64 slots)</span></div>'
+    html += '</div>'
+    html += '<div class="sim-summary-tagline">That\'s a <strong>~60x improvement</strong> in confirmation time.</div>'
+    html += '<div class="sim-summary-replay">' + renderControls(controls) + '</div>'
+    html += '</div>'
+  } else if (tick > 0) {
+    html += '<div class="sim-elapsed-bar">'
+    html += `<span class="sim-elapsed-time">${elapsedText}</span>`
+    html += '</div>'
+    html += '<div class="sim-elapsed-controls">' + renderControls(controls) + '</div>'
+  } else {
+    html += '<div class="sim-elapsed-bar">'
+    html += renderControls(controls)
     html += '</div>'
   }
   html += '</div>'
 
-  // Blocks
-  html += `<div style="display:flex;gap:${gap}px;margin-left:4px">`
-  for (let i = 0; i < blocks.length; i++) {
-    html += renderBlock(blocks[i].status, blocks[i].label)
-  }
-  html += '</div>'
+  html += '</div>' // .sim-unified
 
-  // Finalized pointer row (below blocks)
-  html += `<div style="display:flex;gap:${gap}px;margin-left:4px;height:20px;margin-top:2px">`
-  for (let i = 0; i < blocks.length; i++) {
-    html += `<div style="width:${blockH}px;display:flex;justify-content:center">`
-    if (i === finAt && finAt >= 0) html += renderPtr('FINALIZED', '#22aa44')
-    html += '</div>'
-  }
-  html += '</div>'
-
-  // Vote dots
-  if (showVotes && votes) {
-    html += `<div style="display:flex;gap:${gap}px;margin-left:4px;margin-top:2px">`
-    for (let i = 0; i < votes.length; i++) {
-      html += `<div style="width:${blockH}px">`
-      if (votes[i] !== null) html += renderDots(votes[i].n, 6, votes[i].bad)
-      html += '</div>'
-    }
-    html += '</div>'
-  }
-
-  html += '</div>'
   return html
 }
 
-// ─── Scenario logic ───
+// ─── Assumption Simulations: FCR Client vs Head of Chain ───
 
-function mkBlocks(n) {
-  return Array.from({ length: NUM_SLOTS }).map((_, i) =>
-    i < n ? { status: 'proposed', label: i } : { status: 'empty', label: '' }
-  )
-}
+function computeAssumption(tick, failAt, scenarioType) {
+  const N = ASSUMPTION_TOTAL_SLOTS
+  // Head of chain advances every 2 ticks (slower than FCR)
+  const headChainBlock = Math.min(Math.floor(tick / 2), N - 1)
+  // FCR confirms every tick (faster) until failure
+  const fcrHead = Math.min(tick, N - 1)
 
-function computeNormal(tick) {
-  const n = Math.min(tick, NUM_SLOTS)
+  const failed = tick >= failAt
+  const fallbackTick = failAt + 3 // 3-tick delay before fallback
+  const fellBack = tick >= fallbackTick
 
-  // FCR chain
-  const fcrBlocks = mkBlocks(n).map((b, i) => {
-    if (b.status === 'empty') return b
-    if (i <= Math.max(tick - 8, -1)) return { ...b, status: 'finalized' }
-    if (i <= tick - 1) return { ...b, status: 'confirmed' }
-    return b
+  // FCR bar (top)
+  const fcrBar = Array.from({ length: N }).map((_, i) => {
+    if (!failed) {
+      // Normal: FCR confirms up to fcrHead
+      if (i <= fcrHead) return { status: 'confirmed' }
+      return { status: 'empty' }
+    }
+    if (!fellBack) {
+      // Failed but not yet fallen back: show confirmed up to failAt, frozen
+      if (i < failAt) return { status: 'confirmed' }
+      return { status: 'empty' }
+    }
+    // After fallback: match head of chain (green), advance together
+    const postFallbackHead = headChainBlock
+    if (i <= postFallbackHead) return { status: 'finalized' } // green = tracking head of chain
+    return { status: 'empty' }
   })
 
-  // Finality-only chain
-  const finBlocks = mkBlocks(n).map((b, i) => {
-    if (b.status === 'empty') return b
-    if (i <= Math.max(tick - 8, -1)) return { ...b, status: 'finalized' }
-    return b
+  // Head of chain bar (bottom)
+  const headBar = Array.from({ length: N }).map((_, i) => {
+    if (i <= headChainBlock) return { status: 'finalized' } // green
+    return { status: 'empty' }
   })
 
-  const fcrPtr = n > 0 ? Math.min(tick - 1, n - 1) : -1
-  const finPtr = Math.max(tick - 8, -1)
-  const finPtrClamped = finPtr >= 0 && finPtr < n ? finPtr : -1
+  // Warning message
+  let warning = null
+  if (failed && !fellBack) {
+    warning = scenarioType === 'async'
+      ? 'Network conditions asynchronous — falling back to head of chain'
+      : '>25% adversarial stake detected — falling back to head of chain'
+  }
+
+  // Tooltip label for top bar
+  let fcrTooltipLabel
+  if (!failed) {
+    fcrTooltipLabel = scenarioType === 'async' ? 'Synchronous · Confirmed' : 'Confirmed'
+  } else if (!fellBack) {
+    fcrTooltipLabel = scenarioType === 'async' ? 'Asynchronous' : '>25% adversarial'
+  } else {
+    fcrTooltipLabel = 'Head of chain'
+  }
 
   return {
-    type: 'dual',
-    fcr: { label: 'With FCR', sublabel: 'confirmed pointer advances each slot', badge: n > 0 ? { text: 'CONFIRMING', type: 'ok' } : null, blocks: fcrBlocks, fcrAt: fcrPtr >= 0 ? fcrPtr : -1, finAt: finPtrClamped },
-    ffg: { label: 'Without FCR', sublabel: 'wait ~2 epochs for finality (~64 slots)', badge: finPtrClamped >= 0 ? { text: 'FINALIZING', type: 'info' } : { text: 'WAITING', type: 'info' }, blocks: finBlocks, fcrAt: -1, finAt: finPtrClamped },
-    callout: null
+    type: 'assumption-dual',
+    fcrBar,
+    headBar,
+    fcrHead: failed ? (fellBack ? headChainBlock : failAt - 1) : fcrHead,
+    headChainBlock,
+    failAt,
+    failed,
+    fellBack,
+    warning,
+    fcrTooltipLabel,
+    scenarioType,
+    tick,
+    elapsed: tick * 12
   }
+}
+
+// Randomize failure points once per simulation instance
+let asyncFailAt = null
+let adversaryFailAt = null
+
+function randomizeFailPoints() {
+  asyncFailAt = 18 + Math.floor(Math.random() * 12) // 18–29
+  adversaryFailAt = 28 + Math.floor(Math.random() * 10) // 28–37
 }
 
 function computeAsync(tick) {
-  const asyncAt = 5, resetAt = 12, finSlot = 2
-  const n = Math.min(tick, NUM_SLOTS)
-
-  const blocks = mkBlocks(n).map((b, i) => {
-    if (b.status === 'empty') return b
-    if (tick >= resetAt && i > finSlot) return { ...b, status: 'stale' }
-    if (i <= finSlot) return { ...b, status: 'finalized' }
-    if (tick < asyncAt && i <= tick - 1) return { ...b, status: 'confirmed' }
-    if (tick >= asyncAt && i < asyncAt && i <= asyncAt - 1) return { ...b, status: 'confirmed' }
-    return b
-  })
-
-  let fcrPtr
-  if (tick < 1) fcrPtr = -1
-  else if (tick < asyncAt) fcrPtr = Math.min(tick - 1, n - 1)
-  else if (tick < resetAt) fcrPtr = asyncAt - 1
-  else fcrPtr = finSlot
-
-  let sublabel, badge
-  if (tick < asyncAt) { sublabel = 'confirming normally...'; badge = { text: 'CONFIRMING', type: 'ok' } }
-  else if (tick < resetAt) { sublabel = 'attestations delayed, FCR frozen'; badge = { text: 'STALLED', type: 'warn' } }
-  else { sublabel = 'reset to finalized'; badge = { text: 'RESET', type: 'info' } }
-
-  let callout = null
-  if (tick >= asyncAt && tick < resetAt)
-    callout = { text: `\u26a0 Slot ${asyncAt}+: Attestations delayed beyond synchrony bound. FCR cannot verify LMD dominance. Confirmed pointer frozen at slot ${asyncAt - 1}.`, type: 'warn' }
-  else if (tick >= resetAt)
-    callout = { text: `\u2713 FCR resets confirmed pointer to last finalized block (slot ${finSlot}). Safety preserved \u2014 no invalid confirmation was made. Once synchrony resumes, FCR will begin confirming again.`, type: 'ok' }
-
-  return {
-    type: 'single',
-    chain: { label: 'FCR under async conditions', sublabel, badge, blocks, fcrAt: fcrPtr, finAt: finSlot },
-    callout
-  }
+  if (asyncFailAt === null) randomizeFailPoints()
+  return computeAssumption(tick, asyncFailAt, 'async')
 }
 
 function computeAdversary(tick) {
-  const attackAt = 5, resetAt = 13, finSlot = 2
-  const n = Math.min(tick, NUM_SLOTS)
+  if (adversaryFailAt === null) randomizeFailPoints()
+  return computeAssumption(tick, adversaryFailAt, 'adversary')
+}
 
-  const blocks = mkBlocks(n).map((b, i) => {
-    if (b.status === 'empty') return b
-    if (tick >= resetAt && i > finSlot) return { ...b, status: 'stale' }
-    if (i <= finSlot) return { ...b, status: 'finalized' }
-    if (i < attackAt && i <= Math.min(tick - 1, attackAt - 1)) return { ...b, status: 'confirmed' }
-    return b
-  })
+function renderAssumptionDualBar(state, controls) {
+  const { fcrBar, headBar, fcrHead, headChainBlock, failAt, failed, fellBack, warning, fcrTooltipLabel, tick, elapsed } = state
+  const N = fcrBar.length
 
-  let fcrPtr
-  if (tick < 1) fcrPtr = -1
-  else if (tick < attackAt) fcrPtr = Math.min(tick - 1, n - 1)
-  else if (tick < resetAt) fcrPtr = attackAt - 1
-  else fcrPtr = finSlot
+  let html = '<div class="sim-unified sim-assumption-unified" style="padding:16px;position:relative">'
 
-  // Votes: 6 dots per slot. Before attack: 5/6 honest. After: 4/6 adversary-colored
-  const votes = Array.from({ length: NUM_SLOTS }).map((_, i) => {
-    if (i >= n) return null
-    if (i >= attackAt) return { n: 4, bad: true }
-    return { n: 5, bad: false }
-  })
+  // ── Top bar: FCR Client ──
+  html += '<div class="sim-dual-row" id="sim-fcr-row">'
+  html += '<div class="sim-dual-label">FCR Client</div>'
+  html += '<div class="sim-dual-bar-wrap" style="padding-top:28px" data-bar="fcr">'
 
-  let sublabel, badge
-  if (tick < attackAt) { sublabel = 'confirming normally, >75% honest...'; badge = { text: 'CONFIRMING', type: 'ok' } }
-  else if (tick < resetAt) { sublabel = 'adversary withholding votes'; badge = { text: 'STALLED', type: 'warn' } }
-  else { sublabel = 'reset to finalized'; badge = { text: 'RESET', type: 'info' } }
-
-  let callout = null
-  if (tick >= attackAt && tick < resetAt)
-    callout = { text: `\u26a0 Slot ${attackAt}+: Adversary (>25% stake) withholding attestations. Insufficient vote weight to pass confirmation. FCR cannot advance \u2014 this is a liveness failure, NOT a safety failure.`, type: 'warn' }
-  else if (tick >= resetAt)
-    callout = { text: `\u2713 FCR resets to finalized (slot ${finSlot}). Key point: the adversary stalled confirmation but could NOT reorg any previously confirmed block. Reorg would require >50% of active validators.`, type: 'ok' }
-
-  return {
-    type: 'single',
-    chain: { label: 'FCR under >25% adversarial stake', sublabel, badge, blocks, fcrAt: fcrPtr, finAt: finSlot, showVotes: true, votes },
-    callout
+  // Head bubble on top bar with contextual label
+  if (fcrHead >= 0) {
+    const pct = Math.min(((fcrHead + 0.5) / N) * 100, 98)
+    const bubbleClass = fellBack
+      ? 'sim-head-bubble sim-head-bubble-green'
+      : (failed ? 'sim-head-bubble sim-head-bubble-red' : 'sim-head-bubble sim-head-bubble-confirmed')
+    html += `<div class="${bubbleClass}" style="left:${pct}%">`
+    html += `<span class="sim-head-bubble-text">Block ${fcrHead + 1} · ${fcrTooltipLabel}</span>`
+    html += '<div class="sim-head-bubble-arrow"></div>'
+    html += '</div>'
   }
+
+  html += '<div class="sim-bar">'
+  for (let i = 0; i < N; i++) {
+    const failMark = (failed && i === failAt - 1) ? ' border-right:2px dashed #cc3333;' : ''
+    html += `<div class="sim-bar-seg ${fcrBar[i].status}" style="${failMark}"></div>`
+  }
+  html += '</div>' // .sim-bar
+  html += '</div>' // .sim-dual-bar-wrap
+  html += '</div>' // .sim-dual-row
+
+  // Warning badge + fallback arrow
+  if (warning) {
+    html += '<div class="sim-fallback-indicator">'
+    html += `<div class="sim-warning-badge">\u26a0 ${warning}</div>`
+    html += '<div class="sim-fallback-arrow">\u2193</div>'
+    html += '</div>'
+  } else if (fellBack) {
+    html += '<div class="sim-fallback-indicator">'
+    html += '<div class="sim-fallback-arrow-done">\u2193 Deferred to head of chain</div>'
+    html += '</div>'
+  }
+
+  // Gap
+  html += '<div style="height:8px"></div>'
+
+  // ── Bottom bar: Head of Chain ──
+  html += '<div class="sim-dual-row" id="sim-head-row">'
+  html += '<div class="sim-dual-label" style="color:#22aa44">Head of Chain</div>'
+  html += '<div class="sim-dual-bar-wrap" style="padding-top:28px" data-bar="head">'
+
+  // Head bubble on bottom bar (always green)
+  if (headChainBlock >= 0) {
+    const pct = Math.min(((headChainBlock + 0.5) / N) * 100, 98)
+    const headLabel = (failed && fellBack) ? 'Head of the chain \u2713' : 'Head of the chain'
+    html += `<div class="sim-head-bubble sim-head-bubble-green" style="left:${pct}%">`
+    html += `<span class="sim-head-bubble-text">${headLabel} · ${formatTime(elapsed)}</span>`
+    html += '<div class="sim-head-bubble-arrow"></div>'
+    html += '</div>'
+  }
+
+  html += '<div class="sim-bar">'
+  for (let i = 0; i < N; i++) {
+    html += `<div class="sim-bar-seg ${headBar[i].status}"></div>`
+  }
+  html += '</div>' // .sim-bar
+  html += '</div>' // .sim-dual-bar-wrap
+  html += '</div>' // .sim-dual-row
+
+  // Callout inside box
+  if (fellBack) {
+    html += renderCallout(
+      '\u2713 FCR fell back to head of chain. Safety preserved — no invalid confirmation was made.',
+      'ok'
+    )
+  } else if (failed) {
+    html += renderCallout(
+      '\u26a0 FCR cannot confirm new blocks. Falling back to head of chain...',
+      'warn'
+    )
+  }
+
+  // Controls
+  html += '<div class="sim-bottom-area">'
+  if (tick > 0) {
+    html += '<div class="sim-elapsed-bar">'
+    html += `<span class="sim-elapsed-time">${formatTime(elapsed)}</span>`
+    html += '</div>'
+    html += '<div class="sim-elapsed-controls">' + renderControls(controls) + '</div>'
+  } else {
+    html += '<div class="sim-elapsed-bar">'
+    html += renderControls(controls)
+    html += '</div>'
+  }
+  html += '</div>'
+
+  html += '</div>' // .sim-unified
+
+  return html
 }
 
 // ─── Scenario definitions ───
 
 const SCENARIOS = {
-  normal: { label: 'FCR vs Finality', desc: 'Normal conditions \u2014 FCR confirms in ~1 slot while finality takes ~2 epochs', compute: computeNormal, legend: ['proposed', 'confirmed', 'finalized'], maxTicks: 14 },
-  async: { label: 'Async Failure', desc: 'Network asynchrony causes attestations to arrive late. FCR stalls, then resets to finalized.', compute: computeAsync, legend: ['proposed', 'confirmed', 'finalized', 'stale'], maxTicks: 16 },
-  adversary: { label: '>25% Adversary', desc: 'Adversary withholds votes. FCR cannot confirm \u2014 liveness failure (not safety failure).', compute: computeAdversary, legend: ['proposed', 'confirmed', 'finalized', 'stale', 'adversary'], maxTicks: 16 }
+  normal: {
+    label: 'FCR vs Finality',
+    desc: 'Two bars advance together: with FCR (orange = confirmed) vs without FCR (gray = waiting). At finalization, both turn green.',
+    compute: computeNormal,
+    legend: ['proposed', 'confirmed', 'finalized'],
+    maxTicks: NORMAL_MAX_TICKS
+  },
+  async: {
+    label: 'Async Failure',
+    desc: 'FCR confirms blocks faster, but when network goes asynchronous, FCR falls back to head of chain.',
+    compute: computeAsync,
+    legend: ['confirmed', 'finalized'],
+    maxTicks: ASSUMPTION_TOTAL_SLOTS * 2 + 6
+  },
+  adversary: {
+    label: '>25% Adversary',
+    desc: 'With >25% adversarial stake, FCR can\'t confirm — it falls back to head of chain safely.',
+    compute: computeAdversary,
+    legend: ['confirmed', 'finalized'],
+    maxTicks: ASSUMPTION_TOTAL_SLOTS * 2 + 6
+  }
 }
 
-// ─── Standalone simulation class (no tabs) ───
+// ─── Simulation class ───
 
 export class BlockSimulation {
   constructor(container, scenarioKey) {
@@ -258,52 +464,37 @@ export class BlockSimulation {
     this.isPlaying = false
     this.animFrameId = null
     this.lastTickTime = 0
+    this.isMobile = window.innerWidth < 640
+    this.tickSpeed = TICK_SPEEDS[this.scenarioKey] || 900
 
     this.render()
     this.updateDisplay()
   }
 
   render() {
+    const isNormal = this.scenarioKey === 'normal'
     this.container.innerHTML = `
-      <div class="space-y-5">
+      <div class="space-y-3">
         <p class="text-text-muted text-sm" id="sim-desc-${this.scenarioKey}"></p>
-        <div class="flex items-center gap-2">
-          <button class="border border-text/12 bg-white text-text text-xs font-semibold px-3.5 py-1.5 rounded-md cursor-pointer hover:bg-text/5 transition-colors" id="sim-restart-${this.scenarioKey}">Restart</button>
-          <button class="border border-text/12 bg-white text-text text-xs font-semibold px-3.5 py-1.5 rounded-md cursor-pointer hover:bg-text/5 transition-colors" id="sim-play-${this.scenarioKey}">Play</button>
-        </div>
-        <div class="flex flex-wrap gap-5 text-[11px] text-text-muted" id="sim-legend-${this.scenarioKey}"></div>
-        <div id="sim-viewport-${this.scenarioKey}" style="min-height:280px;overflow:hidden"></div>
-        <div class="flex items-center gap-3">
-          <span class="text-[10px] text-text-muted font-semibold" style="width:60px" id="sim-slot-${this.scenarioKey}">Slot 0</span>
-          <div class="flex-1 h-1 rounded-sm" style="background:rgba(74,74,74,0.08)">
-            <div class="h-1 rounded-sm bg-primary transition-[width] duration-400" id="sim-progress-${this.scenarioKey}" style="width:0%"></div>
-          </div>
-        </div>
+        <div class="flex flex-wrap gap-3 text-[11px] text-text-muted" id="sim-legend-${this.scenarioKey}"></div>
+        <div id="sim-viewport-${this.scenarioKey}" class="sim-viewport${isNormal ? ' sim-viewport-normal' : ''}"></div>
       </div>
     `
 
-    this.container.querySelector(`#sim-play-${this.scenarioKey}`).addEventListener('click', () => this.isPlaying ? this.pause() : this.play())
-    this.container.querySelector(`#sim-restart-${this.scenarioKey}`).addEventListener('click', () => this.restart())
-
-    // Set description
     this.container.querySelector(`#sim-desc-${this.scenarioKey}`).textContent = this.scenario.desc
-
-    // Render legend
     this.renderLegend()
   }
 
   renderLegend() {
     const defs = {
-      proposed: { color: '#737373', label: 'Proposed' },
+      proposed: { color: '#737373', label: 'Proposed (unconfirmed)' },
       confirmed: { color: '#F05F36', label: 'Confirmed (FCR)' },
-      finalized: { color: '#22aa44', label: 'Finalized (FFG)' },
-      stale: { color: '#ccc', label: 'Stale (reset)', border: '2px dashed #aaa', opacity: '0.5' },
-      adversary: { color: '#cc3333', label: 'Adversarial votes' }
+      finalized: { color: '#22aa44', label: 'Finalized / Head of Chain' }
     }
     const items = this.scenario.legend
     this.container.querySelector(`#sim-legend-${this.scenarioKey}`).innerHTML = items.map(k => {
       const d = defs[k]
-      const style = `width:14px;height:14px;border-radius:4px;background:${d.color};${d.border ? 'border:' + d.border + ';' : ''}${d.opacity ? 'opacity:' + d.opacity + ';' : ''}`
+      const style = `width:14px;height:14px;border-radius:4px;background:${d.color}`
       return `<div class="flex items-center gap-1.5"><div style="${style}"></div><span>${d.label}</span></div>`
     }).join('')
   }
@@ -311,22 +502,31 @@ export class BlockSimulation {
   play() {
     if (this.tick >= this.scenario.maxTicks) this.tick = 0
     this.isPlaying = true
-    this.container.querySelector(`#sim-play-${this.scenarioKey}`).textContent = 'Pause'
     this.lastTickTime = performance.now()
+    this.updateDisplay()
     this.animFrameId = requestAnimationFrame(t => this.loop(t))
   }
 
   pause() {
     this.isPlaying = false
-    this.container.querySelector(`#sim-play-${this.scenarioKey}`).textContent = 'Play'
     if (this.animFrameId) { cancelAnimationFrame(this.animFrameId); this.animFrameId = null }
+    this.updateDisplay()
   }
 
-  restart() { this.pause(); this.tick = 0; this.updateDisplay() }
+  restart() {
+    this.pause()
+    this.tick = 0
+    // Re-randomize failure points on restart
+    if (this.scenarioKey === 'async' || this.scenarioKey === 'adversary') {
+      asyncFailAt = null
+      adversaryFailAt = null
+    }
+    this.updateDisplay()
+  }
 
   loop(now) {
     if (!this.isPlaying) return
-    if (now - this.lastTickTime >= TICK_MS) {
+    if (now - this.lastTickTime >= this.tickSpeed) {
       this.lastTickTime = now
       this.tick++
       if (this.tick > this.scenario.maxTicks) { this.tick = this.scenario.maxTicks; this.pause(); return }
@@ -339,19 +539,26 @@ export class BlockSimulation {
     const state = this.scenario.compute(this.tick)
     const viewport = this.container.querySelector(`#sim-viewport-${this.scenarioKey}`)
 
-    let html = ''
-    if (state.type === 'dual') {
-      html += renderChain(state.fcr)
-      html += renderChain(state.ffg)
-    } else {
-      html += renderChain(state.chain)
+    const controls = {
+      scenarioKey: this.scenarioKey,
+      isPlaying: this.isPlaying,
+      tick: this.tick,
+      maxTicks: this.scenario.maxTicks
     }
-    if (state.callout) html += renderCallout(state.callout.text, state.callout.type)
+
+    let html = ''
+    if (state.type === 'normal-dual') {
+      html += renderNormalChain(state, controls)
+    } else if (state.type === 'assumption-dual') {
+      html += renderAssumptionDualBar(state, controls)
+    }
+
     viewport.innerHTML = html
 
-    const max = this.scenario.maxTicks
-    const pct = (Math.min(this.tick, max) / max) * 100
-    this.container.querySelector(`#sim-progress-${this.scenarioKey}`).style.width = `${pct}%`
-    this.container.querySelector(`#sim-slot-${this.scenarioKey}`).textContent = `Slot ${Math.min(this.tick, NUM_SLOTS)}`
+    // Re-bind events
+    const playBtn = this.container.querySelector(`#sim-play-${this.scenarioKey}`)
+    const restartBtn = this.container.querySelector(`#sim-restart-${this.scenarioKey}`)
+    if (playBtn) playBtn.addEventListener('click', () => this.isPlaying ? this.pause() : this.play())
+    if (restartBtn) restartBtn.addEventListener('click', () => this.restart())
   }
 }
