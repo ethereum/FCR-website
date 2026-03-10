@@ -879,3 +879,11 @@ details[open] summary .faq-icon {
     font-size: 14px;
   }
 }
+
+/* Trade-offs table row hover */
+table tbody tr {
+  transition: background-color 0.15s ease;
+}
+table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}

@@ -249,7 +249,13 @@
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full text-sm md:text-base border-collapse">
+          <table class="w-full text-sm md:text-base border-collapse table-fixed">
+            <colgroup>
+              <col class="w-[28%]">
+              <col class="w-[24%]">
+              <col class="w-[24%]">
+              <col class="w-[24%]">
+            </colgroup>
             <thead>
               <tr>
                 <th class="text-left text-text-muted font-medium py-3 px-4 border-b-2 border-text-muted/20"></th>
@@ -306,21 +312,22 @@
                 <td class="text-text-muted py-3 px-4 border-b border-text-muted/10">High-value settlements, irreversible operations</td>
               </tr>
               <tr>
-                <td class="text-text font-medium py-3 px-4">Failure behavior</td>
-                <td class="text-text-muted py-3 px-4">&mdash;</td>
-                <td class="text-text-muted py-3 px-4 bg-primary/5">Falls back to finalized block</td>
-                <td class="text-text-muted py-3 px-4">Stalls until supermajority restored</td>
+                <td class="text-text font-medium py-3 px-4 border-b border-text-muted/10">Failure behavior</td>
+                <td class="text-text-muted py-3 px-4 border-b border-text-muted/10">&mdash;</td>
+                <td class="text-text-muted py-3 px-4 border-b border-text-muted/10 bg-primary/5">Falls back to finalized block</td>
+                <td class="text-text-muted py-3 px-4 border-b border-text-muted/10">Stalls until supermajority restored</td>
+              </tr>
+              <tr class="bg-text-muted/5">
+                <td class="text-text font-medium py-4 px-4 align-top rounded-bl-lg">Summary</td>
+                <td class="text-text-muted py-4 px-4 align-top">Waits for a fixed number of blocks with no formal safety guarantee.</td>
+                <td class="text-primary font-bold py-4 px-4 align-top bg-primary/10">Deterministic confirmation in ~13 seconds under normal network conditions — falling back to finality if conditions deteriorate.</td>
+                <td class="text-text-muted py-4 px-4 align-top rounded-br-lg">Unconditional permanence backed by slashable stake, but takes ~13 minutes.</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Footnote -->
-        <div class="space-y-2 text-text-muted text-xs md:text-sm leading-relaxed max-w-3xl">
-          <p><strong class="text-text">k-deep</strong> waits for a fixed number of blocks with no formal safety guarantee.</p>
-          <p class="text-primary font-bold text-sm md:text-base"><strong>FCR</strong> offers deterministic confirmation in ~13 seconds under normal network conditions — falling back to finality if conditions deteriorate.</p>
-          <p><strong class="text-text">Finality</strong> provides unconditional permanence backed by slashable stake, but takes ~13 minutes.</p>
-        </div>
+
       </section>
 
       <!-- Assumptions Section -->
@@ -338,7 +345,7 @@
             <div class="space-y-2">
               <div class="text-primary text-sm font-medium tracking-wider">ASSUMPTION 01</div>
               <h4 class="text-primary text-xl md:text-2xl font-bold">Communication model (synchrony)</h4>
-              <p class="text-text-muted text-sm md:text-base">
+              <p class="text-text-muted text-sm md:text-base max-w-[600px]">
                 FCR requires attestations to arrive within the synchrony bound. If the network becomes asynchronous, FCR falls back to the finalized block. In rare cases, brief asynchrony may go undetected — a confirmed block could be reorganized before the fallback triggers.
               </p>
             </div>
@@ -350,7 +357,7 @@
             <div class="space-y-2">
               <div class="text-primary text-sm font-medium tracking-wider">ASSUMPTION 02</div>
               <h4 class="text-primary text-xl md:text-2xl font-bold">Adversarial threshold (&lt;25%)</h4>
-              <p class="text-text-muted text-sm md:text-base">
+              <p class="text-text-muted text-sm md:text-base max-w-[600px]">
                 FCR requires that at least 75% of total stake is honest and participating. If adversarial stake exceeds 25%, FCR may lose liveness (stalling confirmations) or, in adversarial conditions combined with network issues, safety.
               </p>
             </div>
@@ -529,8 +536,8 @@
       </section>
 
       <!-- Footer -->
-      <footer class="pt-8 border-t border-text-muted/20 mt-24 md:mt-32 lg:mt-40">
-        <div class="flex flex-col md:flex-row items-start justify-between gap-8">
+      <footer class="mt-24 md:mt-32 lg:mt-40">
+        <div class="bg-background rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-start justify-between gap-8">
           <div class="flex items-center gap-8">
             <div class="flex flex-col">
               <span class="text-primary text-2xl font-bold tracking-tight">FCR</span>
