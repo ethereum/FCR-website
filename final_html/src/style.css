@@ -198,6 +198,11 @@ details[open] summary .faq-icon {
 .sim-bar-seg.empty { background: rgba(74,74,74,0.08); }
 .sim-bar-seg.proposed { background: #737373; }
 .sim-bar-seg.confirmed { background: var(--color-primary); }
+.sim-bar-seg.reorged { background: #cc3333; animation: reorg-flash 0.6s ease-in-out infinite alternate; }
+@keyframes reorg-flash {
+  from { background: var(--color-primary); }
+  to { background: #cc3333; }
+}
 .sim-bar-seg.finalized { background: #22aa44; }
 
 /* Epoch divider */
@@ -873,4 +878,41 @@ details[open] summary .faq-icon {
   .sim-summary-tagline {
     font-size: 14px;
   }
+}
+
+/* Use case cards */
+.use-case-card {
+  transition: background-color 0.25s ease;
+}
+.use-case-card:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+.use-case-card:hover .use-case-btn {
+  background-color: var(--color-primary);
+  color: var(--color-background);
+}
+.use-case-card svg.lucide {
+  transition: transform 0.6s ease;
+}
+.use-case-card:hover svg.lucide {
+  transform: scale(1.08);
+}
+.use-case-card:hover svg.lucide path,
+.use-case-card:hover svg.lucide line,
+.use-case-card:hover svg.lucide polyline,
+.use-case-card:hover svg.lucide circle,
+.use-case-card:hover svg.lucide rect {
+  animation: icon-draw 1.8s ease;
+}
+@keyframes icon-draw {
+  0% { stroke-dasharray: 60; stroke-dashoffset: 60; }
+  100% { stroke-dasharray: 60; stroke-dashoffset: 0; }
+}
+
+/* Trade-offs table row hover */
+table tbody tr {
+  transition: background-color 0.15s ease;
+}
+table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.03);
 }
