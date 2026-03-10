@@ -909,6 +909,16 @@ details[open] summary .faq-icon {
   100% { stroke-dasharray: 60; stroke-dashoffset: 0; }
 }
 
+/* Trade-offs table mobile */
+@media (max-width: 767px) {
+  table th, table td {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+}
+
 /* Trade-offs table row hover */
 table tbody tr {
   transition: background-color 0.15s ease;
