@@ -328,7 +328,7 @@
         <div class="space-y-4">
           <h3 class="text-primary text-3xl md:text-4xl lg:text-5xl font-extrabold">Assumptions</h3>
           <p class="text-text-muted text-sm md:text-base max-w-3xl">
-            FCR relies on two assumptions. When either breaks, it falls back to finality — no incorrect confirmation is ever issued.
+            FCR relies on two assumptions. When either breaks, it falls back to finality. Under rare conditions, a briefly-confirmed block may be reorganized.
           </p>
         </div>
 
@@ -339,7 +339,7 @@
               <div class="text-primary text-sm font-medium tracking-wider">ASSUMPTION 01</div>
               <h4 class="text-primary text-xl md:text-2xl font-bold">Communication model (synchrony)</h4>
               <p class="text-text-muted text-sm md:text-base">
-                FCR requires attestations to arrive within the synchrony bound. If the network becomes asynchronous, FCR stalls and resets to the last finalized block.
+                FCR requires attestations to arrive within the synchrony bound. If the network becomes asynchronous, FCR falls back to the finalized block. In rare cases, brief asynchrony may go undetected — a confirmed block could be reorganized before the fallback triggers.
               </p>
             </div>
             <div id="sim-async-container"></div>
@@ -351,7 +351,7 @@
               <div class="text-primary text-sm font-medium tracking-wider">ASSUMPTION 02</div>
               <h4 class="text-primary text-xl md:text-2xl font-bold">Adversarial threshold (&lt;25%)</h4>
               <p class="text-text-muted text-sm md:text-base">
-                FCR requires less than 25% adversarial stake. If an adversary withholds votes, FCR cannot confirm — a liveness failure, not a safety failure.
+                FCR requires that at least 75% of total stake is honest and participating. If adversarial stake exceeds 25%, FCR may lose liveness (stalling confirmations) or, in adversarial conditions combined with network issues, safety.
               </p>
             </div>
             <div id="sim-adversary-container"></div>

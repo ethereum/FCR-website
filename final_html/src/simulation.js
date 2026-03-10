@@ -244,8 +244,10 @@ function computeAssumption(tick, failAt, scenarioType) {
   const fcrHead = Math.min(tick, N - 1)
 
   const failed = tick >= failAt
-  const fallbackTick = failAt + 3 // 3-tick delay before fallback
+  const reorgTick = failAt + 2 // 2-tick delay: reorg flash
+  const fallbackTick = failAt + 5 // 5-tick delay before fallback (longer to show reorg)
   const fellBack = tick >= fallbackTick
+  const showReorg = scenarioType === 'async' && failed && tick >= reorgTick && !fellBack
 
   // FCR bar (top)
   const fcrBar = Array.from({ length: N }).map((_, i) => {
@@ -255,7 +257,11 @@ function computeAssumption(tick, failAt, scenarioType) {
       return { status: 'empty' }
     }
     if (!fellBack) {
-      // Failed but not yet fallen back: show confirmed up to failAt, frozen
+      // Failed but not yet fallen back
+      if (scenarioType === 'async' && showReorg && i >= failAt - 3 && i < failAt) {
+        // Async: last few confirmed blocks flash red to show potential reorg
+        return { status: 'reorged' }
+      }
       if (i < failAt) return { status: 'confirmed' }
       return { status: 'empty' }
     }
@@ -274,9 +280,13 @@ function computeAssumption(tick, failAt, scenarioType) {
   // Warning message
   let warning = null
   if (failed && !fellBack) {
-    warning = scenarioType === 'async'
-      ? 'Network conditions asynchronous — falling back to head of chain'
-      : '>25% adversarial stake detected — falling back to head of chain'
+    if (scenarioType === 'async') {
+      warning = showReorg
+        ? 'Asynchrony undetected — confirmed blocks may be reorganized'
+        : 'Network conditions asynchronous — falling back to head of chain'
+    } else {
+      warning = '>25% adversarial stake — liveness compromised'
+    }
   }
 
   // Tooltip label for top bar
@@ -298,6 +308,7 @@ function computeAssumption(tick, failAt, scenarioType) {
     failAt,
     failed,
     fellBack,
+    showReorg,
     warning,
     fcrTooltipLabel,
     scenarioType,
@@ -365,7 +376,7 @@ function renderAssumptionDualBar(state, controls) {
     html += '</div>'
   } else if (fellBack) {
     html += '<div class="sim-fallback-indicator">'
-    html += '<div class="sim-fallback-arrow-done">\u2193 Deferred to head of chain</div>'
+    html += `<div class="sim-fallback-arrow-done">\u2193 ${state.scenarioType === 'async' ? 'Fell back to finalized block' : 'Deferred to head of chain'}</div>`
     html += '</div>'
   }
 
@@ -397,15 +408,29 @@ function renderAssumptionDualBar(state, controls) {
 
   // Callout inside box
   if (fellBack) {
-    html += renderCallout(
-      '\u2713 FCR fell back to head of chain. Safety preserved — no invalid confirmation was made.',
-      'ok'
-    )
+    if (state.scenarioType === 'async') {
+      html += renderCallout(
+        '\u2713 FCR detected asynchrony and fell back to the finalized block. If asynchrony goes undetected, a confirmed block may be reorganized.',
+        'ok'
+      )
+    } else {
+      html += renderCallout(
+        '\u2713 FCR fell back to head of chain. Liveness lost — confirmations stalled. Under adversarial conditions combined with network issues, safety may also be at risk.',
+        'ok'
+      )
+    }
   } else if (failed) {
-    html += renderCallout(
-      '\u26a0 FCR cannot confirm new blocks. Falling back to head of chain...',
-      'warn'
-    )
+    if (state.scenarioType === 'async' && state.showReorg) {
+      html += renderCallout(
+        '\u26a0 Confirmed blocks being reorganized — brief asynchrony went undetected.',
+        'warn'
+      )
+    } else {
+      html += renderCallout(
+        '\u26a0 FCR cannot confirm new blocks. Falling back to head of chain...',
+        'warn'
+      )
+    }
   }
 
   // Controls
@@ -439,14 +464,14 @@ const SCENARIOS = {
   },
   async: {
     label: 'Async Failure',
-    desc: 'FCR confirms blocks faster, but when network goes asynchronous, FCR falls back to head of chain.',
+    desc: 'FCR confirms blocks faster, but when network goes asynchronous, confirmed blocks may be reorganized before FCR falls back.',
     compute: computeAsync,
     legend: ['confirmed', 'finalized'],
     maxTicks: ASSUMPTION_TOTAL_SLOTS * 2 + 6
   },
   adversary: {
     label: '>25% Adversary',
-    desc: 'With >25% adversarial stake, FCR can\'t confirm — it falls back to head of chain safely.',
+    desc: 'With >25% adversarial stake, FCR loses liveness. Combined with network issues, safety may also be at risk.',
     compute: computeAdversary,
     legend: ['confirmed', 'finalized'],
     maxTicks: ASSUMPTION_TOTAL_SLOTS * 2 + 6
