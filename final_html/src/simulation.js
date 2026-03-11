@@ -5,8 +5,8 @@
  * - Assumption 2: FCR Client vs Head of Chain — adversary failure + fallback
  */
 
-const NORMAL_TOTAL_SLOTS = 64
-const NORMAL_MAX_TICKS = 68   // 64 + 4 buffer for finalization snap
+const NORMAL_TOTAL_SLOTS = 96
+const NORMAL_MAX_TICKS = 36   // 32 epoch-3 slots + 4 buffer for finalization snap
 const NORMAL_TICK_SPEED = 200 // ms per tick
 
 const ASSUMPTION_TOTAL_SLOTS = 40
@@ -42,33 +42,68 @@ function renderCallout(text, type) {
 }
 
 // ─── Main Simulation: Dual-bar (With FCR / Without FCR) ───
+//
+// The animation starts at the first slot of epoch 3 (slot 64), with epochs 1 & 2
+// pre-populated. Each tick the head advances one slot through epoch 3.
+//
+// Initial state (tick=0):
+//   With FCR:    slot 0 = green, slots 1–63 = orange, slot 64 = gray
+//   Without FCR: slot 0 = green, slots 1–64 = gray
+//
+// Each tick:
+//   With FCR:    new slot → gray; previous gray → orange
+//   Without FCR: new slot → gray
+//
+// Finalization (3 ticks after epoch 3 ends):
+//   Both bars: slots 0–31 (epoch 1) turn green
 
 function computeNormal(tick) {
-  const N = NORMAL_TOTAL_SLOTS
-  const headBlock = tick > 0 ? Math.min(tick - 1, N - 1) : null
-  const proposed = Math.min(tick, N)
-  const finalizationTick = N + 3 // finalize after all blocks proposed + small lag
+  const N = NORMAL_TOTAL_SLOTS  // 96
+  const epoch3Start = SLOTS_PER_EPOCH * 2  // 64
 
-  // Top bar (With FCR): confirmed as head passes
-  const fcrBar = Array.from({ length: N }).map((_, i) => {
-    if (i >= proposed) return { status: 'empty' }
-    if (tick >= finalizationTick) return { status: 'finalized' }
-    if (headBlock !== null && i <= headBlock) return { status: 'confirmed' }
-    return { status: 'proposed' }
-  })
+  // Head advances slot-by-slot through epoch 3; caps at slot 95
+  const headBlock = epoch3Start + Math.min(tick, SLOTS_PER_EPOCH - 1)
 
-  // Bottom bar (Without FCR): proposed (gray) until finalization, then all green
-  const finBar = Array.from({ length: N }).map((_, i) => {
-    if (i >= proposed) return { status: 'empty' }
-    if (tick >= finalizationTick) return { status: 'finalized' }
-    return { status: 'proposed' }
-  })
-
-  const fcrConfirmed = headBlock !== null ? headBlock + 1 : 0
+  // Slot 95 is the last; finalize 3 ticks after the head reaches it (tick 31)
+  const finalizationTick = (SLOTS_PER_EPOCH - 1) + 3  // 34
   const allFinalized = tick >= finalizationTick
-  const finConfirmed = allFinalized ? N : 0
 
-  const elapsedSec = Math.min(tick, N) * 12
+  // While tick < SLOTS_PER_EPOCH the head is still advancing and that slot is gray.
+  // Once tick >= SLOTS_PER_EPOCH the head has passed slot 95; no gray slot remains.
+  const graySlot = tick < SLOTS_PER_EPOCH ? headBlock : -1
+
+  // With FCR bar:
+  //   slot 0           → always green (finalized from the start)
+  //   slots 1..head-1  → orange (FCR confirmed)
+  //   slot head        → gray (just proposed, not yet FCR-confirmed)
+  //   slots head+1..95 → empty
+  //   After finalization: slots 0–31 turn green
+  const fcrBar = Array.from({ length: N }).map((_, i) => {
+    if (i > headBlock) return { status: 'empty' }
+    if (allFinalized && i < SLOTS_PER_EPOCH) return { status: 'finalized' }
+    if (i === graySlot) return { status: 'proposed' }
+    if (i === 0) return { status: 'finalized' }  // slot 0 green from start
+    return { status: 'confirmed' }
+  })
+
+  // Without FCR bar:
+  //   slot 0          → always green
+  //   slots 1..head   → gray (proposed, unconfirmed)
+  //   slots head+1..  → empty
+  //   After finalization: slots 0–31 turn green
+  const finBar = Array.from({ length: N }).map((_, i) => {
+    if (i > headBlock) return { status: 'empty' }
+    if (allFinalized && i < SLOTS_PER_EPOCH) return { status: 'finalized' }
+    if (i === 0) return { status: 'finalized' }
+    return { status: 'proposed' }
+  })
+
+  // Confirmed counter: slots 0..(headBlock-1) for FCR while head is advancing;
+  // all 96 once the head has passed the last slot.
+  const fcrConfirmed = tick < SLOTS_PER_EPOCH ? headBlock : N
+  const finConfirmed = allFinalized ? SLOTS_PER_EPOCH : 0
+
+  const elapsedSec = tick * 12  // seconds elapsed since epoch 3 started
   const elapsedText = tick > 0 ? formatTime(elapsedSec) : ''
 
   return {
@@ -76,6 +111,7 @@ function computeNormal(tick) {
     fcrBar,
     finBar,
     headBlock,
+    graySlot,
     elapsedText,
     fcrConfirmed,
     finConfirmed,
@@ -102,7 +138,7 @@ function renderControls(controls) {
 }
 
 function renderNormalChain(state, controls) {
-  const { fcrBar, finBar, headBlock, elapsedText, fcrConfirmed, finConfirmed, allFinalized, tick } = state
+  const { fcrBar, finBar, headBlock, graySlot, elapsedText, fcrConfirmed, finConfirmed, allFinalized, tick } = state
   const N = NORMAL_TOTAL_SLOTS
 
   let html = '<div class="sim-unified">'
@@ -117,14 +153,15 @@ function renderNormalChain(state, controls) {
   html += `<div class="sim-dual-section-header"><span class="sim-dual-section-label sim-dual-section-label-fcr">With FCR</span><span class="sim-dual-section-counter">confirmed: ${fcrConfirmed}</span></div>`
   html += '<div class="sim-dual-bar-wrap">'
 
-  // Head bubble on top bar (green = confirmed, green = finalized)
-  if (headBlock !== null && headBlock >= 0) {
-    const pct = Math.min(((headBlock + 0.5) / N) * 100, 98)
-    const elapsedSec = (headBlock + 1) * 12
-    const label = allFinalized ? 'Finalized' : 'Confirmed'
+  // Head bubble on top bar — follows the gray (proposed) slot while advancing,
+  // then stays at slot 95; turns green on finalization
+  {
+    const bubbleSlot = graySlot >= 0 ? graySlot : headBlock
+    const pct = Math.min(((bubbleSlot + 0.5) / N) * 100, 98)
+    const label = allFinalized ? 'Finalized' : (graySlot >= 0 ? 'Proposed' : 'Confirmed')
     const bubbleClass = allFinalized ? 'sim-head-bubble sim-head-bubble-green' : 'sim-head-bubble sim-head-bubble-confirmed'
     html += `<div class="${bubbleClass}" style="left:${pct}%">`
-    html += `<span class="sim-head-bubble-text">Block ${headBlock + 1} · ${formatTime(elapsedSec)} · ${label}</span>`
+    html += `<span class="sim-head-bubble-text">Block ${bubbleSlot + 1} · ${label}</span>`
     html += '<div class="sim-head-bubble-arrow"></div>'
     html += '</div>'
   }
@@ -137,11 +174,16 @@ function renderNormalChain(state, controls) {
   for (let i = SLOTS_PER_EPOCH; i < SLOTS_PER_EPOCH * 2 && i < fcrBar.length; i++) {
     html += `<div class="sim-bar-seg ${fcrBar[i].status}"></div>`
   }
+  html += '<div class="sim-epoch-divider"></div>'
+  for (let i = SLOTS_PER_EPOCH * 2; i < SLOTS_PER_EPOCH * 3 && i < fcrBar.length; i++) {
+    html += `<div class="sim-bar-seg ${fcrBar[i].status}"></div>`
+  }
   html += '</div>'
 
   html += '<div class="sim-bar-labels">'
   html += '<span class="sim-bar-epoch-label">Epoch 1</span>'
   html += '<span class="sim-bar-epoch-label">Epoch 2</span>'
+  html += '<span class="sim-bar-epoch-label">Epoch 3</span>'
   html += '</div>'
 
   html += '</div>' // .sim-dual-bar-wrap
@@ -153,7 +195,7 @@ function renderNormalChain(state, controls) {
     html += '<span class="sim-status-pill sim-status-waiting">Finality: waiting...</span>'
   } else if (allFinalized) {
     html += '<span class="sim-status-pill sim-status-confirmed">FCR Confirmed ~13s</span>'
-    html += '<span class="sim-status-pill sim-status-finalized">Finalized ~13m</span>'
+    html += '<span class="sim-status-pill sim-status-finalized">Finalized ~19m</span>'
   }
   html += '</div>'
   html += '</div>' // .sim-dual-section
@@ -166,14 +208,13 @@ function renderNormalChain(state, controls) {
   html += `<div class="sim-dual-section-header"><span class="sim-dual-section-label">Without FCR</span><span class="sim-dual-section-counter">confirmed: ${finConfirmed}</span></div>`
   html += '<div class="sim-dual-bar-wrap">'
 
-  // Head bubble on bottom bar (gray = still waiting, green = finalized)
-  if (headBlock !== null && headBlock >= 0) {
+  // Head bubble on bottom bar — always tracks headBlock; turns green on finalization
+  {
     const pct = Math.min(((headBlock + 0.5) / N) * 100, 98)
-    const elapsedSec = (headBlock + 1) * 12
     const label = allFinalized ? 'Finalized' : 'Still waiting...'
     const bubbleClass = allFinalized ? 'sim-head-bubble sim-head-bubble-green' : 'sim-head-bubble sim-head-bubble-gray'
     html += `<div class="${bubbleClass}" style="left:${pct}%">`
-    html += `<span class="sim-head-bubble-text">Block ${headBlock + 1} · ${formatTime(elapsedSec)} · ${label}</span>`
+    html += `<span class="sim-head-bubble-text">Block ${headBlock + 1} · ${label}</span>`
     html += '<div class="sim-head-bubble-arrow"></div>'
     html += '</div>'
   }
@@ -186,11 +227,16 @@ function renderNormalChain(state, controls) {
   for (let i = SLOTS_PER_EPOCH; i < SLOTS_PER_EPOCH * 2 && i < finBar.length; i++) {
     html += `<div class="sim-bar-seg ${finBar[i].status}"></div>`
   }
+  html += '<div class="sim-epoch-divider"></div>'
+  for (let i = SLOTS_PER_EPOCH * 2; i < SLOTS_PER_EPOCH * 3 && i < finBar.length; i++) {
+    html += `<div class="sim-bar-seg ${finBar[i].status}"></div>`
+  }
   html += '</div>'
 
   html += '<div class="sim-bar-labels">'
   html += '<span class="sim-bar-epoch-label">Epoch 1</span>'
   html += '<span class="sim-bar-epoch-label">Epoch 2</span>'
+  html += '<span class="sim-bar-epoch-label">Epoch 3</span>'
   html += '</div>'
 
   html += '</div>' // .sim-dual-bar-wrap
@@ -200,7 +246,7 @@ function renderNormalChain(state, controls) {
   if (!allFinalized) {
     html += '<span class="sim-status-pill sim-status-waiting">Finality: waiting...</span>'
   } else {
-    html += '<span class="sim-status-pill sim-status-finalized">Finalized ~13m</span>'
+    html += '<span class="sim-status-pill sim-status-finalized">Finalized ~19m</span>'
   }
   html += '</div>'
   html += '</div>' // .sim-dual-section
@@ -212,9 +258,9 @@ function renderNormalChain(state, controls) {
     html += '<div class="sim-summary-highlight-inner">'
     html += '<div class="sim-summary-stat"><span class="sim-summary-value sim-summary-value-fcr">~13s</span><span class="sim-summary-label">With FCR (1 slot)</span></div>'
     html += '<div class="sim-summary-vs">vs</div>'
-    html += '<div class="sim-summary-stat"><span class="sim-summary-value sim-summary-value-fin">~13m</span><span class="sim-summary-label">Without FCR (64 slots)</span></div>'
+    html += '<div class="sim-summary-stat"><span class="sim-summary-value sim-summary-value-fin">~19m</span><span class="sim-summary-label">Without FCR (96 slots)</span></div>'
     html += '</div>'
-    html += '<div class="sim-summary-tagline">That\'s a <strong>~60x improvement</strong> in confirmation time.</div>'
+    html += '<div class="sim-summary-tagline">That\'s a <strong>~88x improvement</strong> in confirmation time.</div>'
     html += '<div class="sim-summary-replay">' + renderControls(controls) + '</div>'
     html += '</div>'
   } else if (tick > 0) {
