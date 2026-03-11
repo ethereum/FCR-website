@@ -673,7 +673,7 @@ details[open] summary .faq-icon {
   pointer-events: none;
   z-index: 20;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   align-items: center;
   overflow: visible;
 }
@@ -692,7 +692,7 @@ details[open] summary .faq-icon {
   font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
-  margin-top: 2px;
+  margin-bottom: 2px;
   line-height: 1;
 }
 

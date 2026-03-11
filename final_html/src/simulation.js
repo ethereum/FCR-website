@@ -130,7 +130,7 @@ function renderControls(controls) {
 }
 
 function renderNormalChain(state, controls) {
-  const { fcrBar, finBar, headBlock, graySlot, atEpoch4, elapsedText, fcrConfirmed, finConfirmed, tick } = state
+  const { fcrBar, finBar, headBlock, graySlot, atEpoch4, elapsedText, tick } = state
   const N = NORMAL_TOTAL_SLOTS
   const atEnd = tick >= NORMAL_MAX_TICKS - 2  // animation has reached its terminal state
 
@@ -143,7 +143,7 @@ function renderNormalChain(state, controls) {
 
   // ── Top bar: With FCR ──
   html += '<div class="sim-dual-section">'
-  html += `<div class="sim-dual-section-header"><span class="sim-dual-section-label sim-dual-section-label-fcr">With FCR</span><span class="sim-dual-section-counter">confirmed: ${fcrConfirmed}</span></div>`
+  html += '<div class="sim-dual-section-header"><span class="sim-dual-section-label sim-dual-section-label-fcr">With FCR</span></div>'
   html += '<div class="sim-dual-bar-wrap">'
 
   // Brace: always spans the single gray slot (1-slot confirmation lag)
@@ -183,13 +183,6 @@ function renderNormalChain(state, controls) {
 
   html += '</div>' // .sim-dual-bar-wrap
 
-  // Status pills
-  html += '<div class="sim-dual-pills-center">'
-  if (fcrConfirmed > 0) {
-    html += '<span class="sim-status-pill sim-status-confirmed">FCR Confirmed ~13s</span>'
-    html += '<span class="sim-status-pill sim-status-waiting">Finality: waiting...</span>'
-  }
-  html += '</div>'
   html += '</div>' // .sim-dual-section
 
   // Gap between bars
@@ -197,7 +190,7 @@ function renderNormalChain(state, controls) {
 
   // ── Bottom bar: Without FCR ──
   html += '<div class="sim-dual-section">'
-  html += `<div class="sim-dual-section-header"><span class="sim-dual-section-label">Without FCR</span><span class="sim-dual-section-counter">confirmed: ${finConfirmed}</span></div>`
+  html += '<div class="sim-dual-section-header"><span class="sim-dual-section-label">Without FCR</span></div>'
   html += '<div class="sim-dual-bar-wrap">'
 
   // Brace: from the latest green slot to the latest gray slot.
@@ -207,7 +200,7 @@ function renderNormalChain(state, controls) {
     const left = (latestGreen / N) * 100
     const gap = headBlock - latestGreen  // unconfirmed distance (excludes the green slot)
     const width = ((gap + 1) / N) * 100  // visual width includes both endpoints
-    const cls = 'sim-brace-done'
+    const cls = 'sim-brace-waiting'
     const label = `delay: ${gap} slots · ${formatTime(gap * 12)}`
     html += `<div class="sim-brace-wrap ${cls}" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%">`
     html += '<div class="sim-brace-line"></div>'
@@ -242,10 +235,6 @@ function renderNormalChain(state, controls) {
 
   html += '</div>' // .sim-dual-bar-wrap
 
-  // Status pills
-  html += '<div class="sim-dual-pills-center">'
-  html += '<span class="sim-status-pill sim-status-waiting">Finality: waiting...</span>'
-  html += '</div>'
   html += '</div>' // .sim-dual-section
 
   // Bottom time / summary area (inside the box)
@@ -255,9 +244,9 @@ function renderNormalChain(state, controls) {
     html += '<div class="sim-summary-highlight-inner">'
     html += '<div class="sim-summary-stat"><span class="sim-summary-value sim-summary-value-fcr">~12s</span><span class="sim-summary-label">With FCR (1 slot)</span></div>'
     html += '<div class="sim-summary-vs">vs</div>'
-    html += '<div class="sim-summary-stat"><span class="sim-summary-value sim-summary-value-fin">~13m</span><span class="sim-summary-label">Without FCR (65 slots)</span></div>'
+    html += '<div class="sim-summary-stat"><span class="sim-summary-value sim-summary-value-fin">~13 – 19 min</span><span class="sim-summary-label">Without FCR (2–3 epochs)</span></div>'
     html += '</div>'
-    html += '<div class="sim-summary-tagline">That\'s a <strong>~65x improvement</strong> in confirmation time.</div>'
+    html += '<div class="sim-summary-tagline">That\'s a <strong>~64–96x improvement</strong> in confirmation time.</div>'
     html += '<div class="sim-summary-replay">' + renderControls(controls) + '</div>'
     html += '</div>'
   } else if (tick > 0) {
