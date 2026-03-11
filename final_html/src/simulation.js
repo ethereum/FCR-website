@@ -153,16 +153,19 @@ function renderNormalChain(state, controls) {
   html += `<div class="sim-dual-section-header"><span class="sim-dual-section-label sim-dual-section-label-fcr">With FCR</span><span class="sim-dual-section-counter">confirmed: ${fcrConfirmed}</span></div>`
   html += '<div class="sim-dual-bar-wrap">'
 
-  // Head bubble on top bar — follows the gray (proposed) slot while advancing,
-  // then stays at slot 95; turns green on finalization
-  {
-    const bubbleSlot = graySlot >= 0 ? graySlot : headBlock
-    const pct = Math.min(((bubbleSlot + 0.5) / N) * 100, 98)
-    const label = allFinalized ? 'Finalized' : (graySlot >= 0 ? 'Proposed' : 'Confirmed')
-    const bubbleClass = allFinalized ? 'sim-head-bubble sim-head-bubble-green' : 'sim-head-bubble sim-head-bubble-confirmed'
-    html += `<div class="${bubbleClass}" style="left:${pct}%">`
-    html += `<span class="sim-head-bubble-text">Block ${bubbleSlot + 1} · ${label}</span>`
-    html += '<div class="sim-head-bubble-arrow"></div>'
+  // Brace annotation on top bar (With FCR):
+  // spans the single gray slot, showing the 1-slot / ~12s confirmation lag.
+  if (graySlot >= 0) {
+    const left = (graySlot / N) * 100
+    const width = (1 / N) * 100
+    html += `<div class="sim-brace-wrap sim-brace-fcr" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%">`
+    html += '<div class="sim-brace-line"></div>'
+    html += '<span class="sim-brace-label">1 slot · ~12s</span>'
+    html += '</div>'
+  } else if (allFinalized) {
+    html += '<div class="sim-brace-wrap sim-brace-done" style="left:0%;width:100%">'
+    html += '<div class="sim-brace-line"></div>'
+    html += '<span class="sim-brace-label">Epoch 1 finalized</span>'
     html += '</div>'
   }
 
@@ -208,14 +211,15 @@ function renderNormalChain(state, controls) {
   html += `<div class="sim-dual-section-header"><span class="sim-dual-section-label">Without FCR</span><span class="sim-dual-section-counter">confirmed: ${finConfirmed}</span></div>`
   html += '<div class="sim-dual-bar-wrap">'
 
-  // Head bubble on bottom bar — always tracks headBlock; turns green on finalization
+  // Brace annotation on bottom bar (Without FCR):
+  // spans from slot 0 (green) to headBlock (latest gray), growing each tick.
   {
-    const pct = Math.min(((headBlock + 0.5) / N) * 100, 98)
-    const label = allFinalized ? 'Finalized' : 'Still waiting...'
-    const bubbleClass = allFinalized ? 'sim-head-bubble sim-head-bubble-green' : 'sim-head-bubble sim-head-bubble-gray'
-    html += `<div class="${bubbleClass}" style="left:${pct}%">`
-    html += `<span class="sim-head-bubble-text">Block ${headBlock + 1} · ${label}</span>`
-    html += '<div class="sim-head-bubble-arrow"></div>'
+    const width = ((headBlock + 1) / N) * 100
+    const cls = allFinalized ? 'sim-brace-done' : 'sim-brace-waiting'
+    const label = allFinalized ? 'Epoch 1 finalized' : `${headBlock} slots · ${formatTime(headBlock * 12)}`
+    html += `<div class="sim-brace-wrap ${cls}" style="left:0%;width:${width.toFixed(2)}%">`
+    html += '<div class="sim-brace-line"></div>'
+    html += `<span class="sim-brace-label">${label}</span>`
     html += '</div>'
   }
 

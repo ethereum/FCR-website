@@ -666,6 +666,40 @@ details[open] summary .faq-icon {
   border-top-color: #9ca3af;
 }
 
+/* ─── Span brace annotation ─── */
+.sim-brace-wrap {
+  position: absolute;
+  top: 2px;
+  pointer-events: none;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: visible;
+}
+
+.sim-brace-line {
+  width: 100%;
+  height: 10px;
+  border-top: 1.5px solid currentColor;
+  border-left: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  box-sizing: border-box;
+  border-radius: 3px 3px 0 0;
+}
+
+.sim-brace-label {
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+.sim-brace-fcr     { color: var(--color-primary); }
+.sim-brace-waiting { color: #9ca3af; }
+.sim-brace-done    { color: #22aa44; }
+
 /* Red dashed fallback line connecting bars at failure point */
 .sim-fallback-line {
   position: absolute;
