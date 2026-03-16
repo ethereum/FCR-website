@@ -78,17 +78,17 @@ function computeNormal(tick) {
   const fcrBar = Array.from({ length: N }).map((_, i) => {
     if (i > headBlock) return { status: 'empty' }
     if (i === graySlot) return { status: 'proposed' }
-    if (i === 0 || (atEpoch4 && i < SLOTS_PER_EPOCH)) return { status: 'finalized' }
+    if (i === 0 || (atEpoch4 && i <= SLOTS_PER_EPOCH)) return { status: 'finalized' }
     return { status: 'confirmed' }
   })
 
   // Without FCR bar:
-  //   slot 0 → always green; slots 0–31 finalize when atEpoch4
+  //   slot 0 → always green; slots 0–32 finalize when atEpoch4
   //   slots 1..head → gray (proposed, unconfirmed)
   //   slots head+1.. → empty
   const finBar = Array.from({ length: N }).map((_, i) => {
     if (i > headBlock) return { status: 'empty' }
-    if (i === 0 || (atEpoch4 && i < SLOTS_PER_EPOCH)) return { status: 'finalized' }
+    if (i === 0 || (atEpoch4 && i <= SLOTS_PER_EPOCH)) return { status: 'finalized' }
     return { status: 'proposed' }
   })
 
@@ -194,9 +194,9 @@ function renderNormalChain(state, controls) {
   html += '<div class="sim-dual-bar-wrap">'
 
   // Brace: from the latest green slot to the latest gray slot.
-  // During animation: latest green = slot 0; on epoch 4: latest green = slot 31.
+  // During animation: latest green = slot 0; on epoch 4: latest green = slot 32.
   {
-    const latestGreen = atEpoch4 ? SLOTS_PER_EPOCH - 1 : 0
+    const latestGreen = atEpoch4 ? SLOTS_PER_EPOCH : 0
     const left = (latestGreen / N) * 100
     const gap = headBlock - latestGreen  // unconfirmed distance (excludes the green slot)
     const width = ((gap + 1) / N) * 100  // visual width includes both endpoints
