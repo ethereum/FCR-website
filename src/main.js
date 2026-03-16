@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Main simulation: FCR vs Finality (positive case)
   initSimulation('sim-container', 'normal')
 
-  // Assumptions section: failure simulations
-  initSimulation('sim-async-container', 'async')
-  initSimulation('sim-adversary-container', 'adversary')
+  // Assumptions section: failure simulations (hidden for now)
+  // initSimulation('sim-async-container', 'async')
+  // initSimulation('sim-adversary-container', 'adversary')
 })
