@@ -1,0 +1,21 @@
+# robots.txt — Fast Confirmation Rule (FCR)
+# https://fastconfirm.it
+
+User-agent: *
+Allow: /
+Disallow: /assets/
+
+# AI crawlers welcome
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://fastconfirm.it/sitemap.xml

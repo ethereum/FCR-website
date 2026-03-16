@@ -1,0 +1,41 @@
+# Fast Confirmation Rule (FCR) for Ethereum
+
+> Confirm Ethereum transactions in ~13 seconds instead of ~13 minutes. No hard fork required.
+
+## What is FCR?
+
+The Fast Confirmation Rule (FCR) is a consensus client feature that provides single-slot confirmation for Ethereum transactions. Instead of waiting for full finality via Casper FFG (~13 minutes / 2 epochs), FCR counts attestations within a single slot to deliver deterministic confirmation in approximately 13 seconds.
+
+## Key Facts
+
+- Confirmation time: ~13 seconds (single slot) vs ~13 minutes (finality)
+- Speed improvement: ~98% reduction in confirmation latency
+- Hard forks required: 0 — FCR is a client-side feature, not a protocol change
+- Adversarial threshold: <25% of total stake must be adversarial
+- Communication model: Requires network synchrony (attestations arrive within bound)
+- Failure behavior: Falls back to the last finalized block if assumptions break
+- No economic security (no slashing) — deterministic guarantee under network assumptions
+
+## How It Works
+
+1. Enable the fast confirmation flag on your consensus client (e.g., `lighthouse bn --fast-confirmation-rule`)
+2. Query `eth_getBlockByNumber("safe")` via JSON-RPC
+3. The `safe` block tag returns the last fast-confirmed block
+
+## Use Cases
+
+- **Exchanges**: Credit deposits within seconds instead of minutes
+- **Cross-Chain Bridges**: Reduce capital lockup for cross-chain transfers
+- **L2s**: Confirm L1 deposits within seconds; automatic fallback to safe head
+- **RPC Providers**: The `safe` tag automatically returns fast-confirmed blocks
+
+## Assumptions
+
+1. **Synchrony**: Attestations must arrive within the synchrony bound
+2. **Honest majority**: At least 75% of total stake must be honest and participating
+
+## Contact
+
+- Email: fastconfirm@ethereum.org
+- Website: https://fastconfirm.it
+- Publisher: Ethereum Foundation
