@@ -20,3 +20,8 @@ dist/
 # Claude / Playwright
 .claude/
 .playwright-mcp/
+
+# Design screenshots (local reference only)
+*.png
+*.jpeg
+!public/*.png
