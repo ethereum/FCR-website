@@ -130,7 +130,7 @@ function renderControls(controls) {
 }
 
 function renderNormalChain(state, controls) {
-  const { fcrBar, finBar, headBlock, graySlot, atEpoch4, elapsedText, tick } = state
+  const { fcrBar, finBar, headBlock, graySlot, atEpoch4, tick } = state
   const N = NORMAL_TOTAL_SLOTS
   const atEnd = tick >= NORMAL_MAX_TICKS - 2  // animation has reached its terminal state
 
@@ -201,7 +201,7 @@ function renderNormalChain(state, controls) {
     const gap = headBlock - latestGreen  // unconfirmed distance (excludes the green slot)
     const width = ((gap + 1) / N) * 100  // visual width includes both endpoints
     const cls = 'sim-brace-waiting'
-    const label = `delay: ${gap} slots · ${formatTime(gap * 12)}`
+    const label = `delay: ${gap} slots`
     html += `<div class="sim-brace-wrap ${cls}" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%">`
     html += '<div class="sim-brace-line"></div>'
     html += `<span class="sim-brace-label">${label}</span>`
@@ -251,7 +251,6 @@ function renderNormalChain(state, controls) {
     html += '</div>'
   } else if (tick > 0) {
     html += '<div class="sim-elapsed-bar">'
-    html += `<span class="sim-elapsed-time">${elapsedText}</span>`
     html += '</div>'
     html += '<div class="sim-elapsed-controls">' + renderControls(controls) + '</div>'
   } else {
