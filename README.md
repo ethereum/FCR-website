@@ -34,7 +34,6 @@ Dev server runs at `http://localhost:5172`.
 ## Project Structure
 
 ```
-final_html/
 ├── index.html              # Main landing page
 ├── design.html             # Design system reference (noindex)
 ├── src/
