@@ -132,7 +132,7 @@ function renderControls(controls) {
 function renderNormalChain(state, controls) {
   const { fcrBar, finBar, headBlock, graySlot, atEpoch4, tick } = state
   const N = NORMAL_TOTAL_SLOTS
-  const atEnd = tick >= NORMAL_MAX_TICKS - 2  // animation has reached its terminal state
+  const atEnd = tick >= NORMAL_MAX_TICKS  // animation has reached its terminal state
 
   let html = '<div class="sim-unified">'
 
@@ -585,7 +585,14 @@ export class BlockSimulation {
     if (now - this.lastTickTime >= this.tickSpeed) {
       this.lastTickTime = now
       this.tick++
-      if (this.tick > this.scenario.maxTicks) { this.tick = this.scenario.maxTicks; this.pause(); return }
+      if (this.tick >= this.scenario.maxTicks) {
+        this.tick = this.scenario.maxTicks
+        this.isPlaying = false
+        cancelAnimationFrame(this.animFrameId)
+        this.animFrameId = null
+        this.updateDisplay()
+        return
+      }
       this.updateDisplay()
     }
     this.animFrameId = requestAnimationFrame(t => this.loop(t))
