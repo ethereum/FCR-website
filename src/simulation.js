@@ -138,7 +138,7 @@ function renderNormalChain(state, controls) {
 
   // Header
   html += '<div class="sim-unified-header">'
-  html += '<span class="sim-unified-title">Ethereum Block Chain</span>'
+  html += '<span class="sim-unified-title">Ethereum mainnet</span>'
   html += '</div>'
 
   // ── Top bar: With FCR ──
