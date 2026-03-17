@@ -78,17 +78,17 @@ function computeNormal(tick) {
   const fcrBar = Array.from({ length: N }).map((_, i) => {
     if (i > headBlock) return { status: 'empty' }
     if (i === graySlot) return { status: 'proposed' }
-    if (i === 0 || (atEpoch4 && i < SLOTS_PER_EPOCH)) return { status: 'finalized' }
+    if (i === 0 || (atEpoch4 && i <= SLOTS_PER_EPOCH)) return { status: 'finalized' }
     return { status: 'confirmed' }
   })
 
   // Without FCR bar:
-  //   slot 0 → always green; slots 0–31 finalize when atEpoch4
+  //   slot 0 → always green; slots 0–32 finalize when atEpoch4
   //   slots 1..head → gray (proposed, unconfirmed)
   //   slots head+1.. → empty
   const finBar = Array.from({ length: N }).map((_, i) => {
     if (i > headBlock) return { status: 'empty' }
-    if (i === 0 || (atEpoch4 && i < SLOTS_PER_EPOCH)) return { status: 'finalized' }
+    if (i === 0 || (atEpoch4 && i <= SLOTS_PER_EPOCH)) return { status: 'finalized' }
     return { status: 'proposed' }
   })
 
@@ -130,9 +130,9 @@ function renderControls(controls) {
 }
 
 function renderNormalChain(state, controls) {
-  const { fcrBar, finBar, headBlock, graySlot, atEpoch4, elapsedText, tick } = state
+  const { fcrBar, finBar, headBlock, graySlot, atEpoch4, tick } = state
   const N = NORMAL_TOTAL_SLOTS
-  const atEnd = tick >= NORMAL_MAX_TICKS - 2  // animation has reached its terminal state
+  const atEnd = tick >= NORMAL_MAX_TICKS  // animation has reached its terminal state
 
   let html = '<div class="sim-unified">'
 
@@ -194,14 +194,14 @@ function renderNormalChain(state, controls) {
   html += '<div class="sim-dual-bar-wrap">'
 
   // Brace: from the latest green slot to the latest gray slot.
-  // During animation: latest green = slot 0; on epoch 4: latest green = slot 31.
+  // During animation: latest green = slot 0; on epoch 4: latest green = slot 32.
   {
-    const latestGreen = atEpoch4 ? SLOTS_PER_EPOCH - 1 : 0
+    const latestGreen = atEpoch4 ? SLOTS_PER_EPOCH : 0
     const left = (latestGreen / N) * 100
     const gap = headBlock - latestGreen  // unconfirmed distance (excludes the green slot)
     const width = ((gap + 1) / N) * 100  // visual width includes both endpoints
     const cls = 'sim-brace-waiting'
-    const label = `delay: ${gap} slots · ${formatTime(gap * 12)}`
+    const label = `delay: ${gap} slots`
     html += `<div class="sim-brace-wrap ${cls}" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%">`
     html += '<div class="sim-brace-line"></div>'
     html += `<span class="sim-brace-label">${label}</span>`
@@ -251,7 +251,6 @@ function renderNormalChain(state, controls) {
     html += '</div>'
   } else if (tick > 0) {
     html += '<div class="sim-elapsed-bar">'
-    html += `<span class="sim-elapsed-time">${elapsedText}</span>`
     html += '</div>'
     html += '<div class="sim-elapsed-controls">' + renderControls(controls) + '</div>'
   } else {
@@ -586,7 +585,14 @@ export class BlockSimulation {
     if (now - this.lastTickTime >= this.tickSpeed) {
       this.lastTickTime = now
       this.tick++
-      if (this.tick > this.scenario.maxTicks) { this.tick = this.scenario.maxTicks; this.pause(); return }
+      if (this.tick >= this.scenario.maxTicks) {
+        this.tick = this.scenario.maxTicks
+        this.isPlaying = false
+        cancelAnimationFrame(this.animFrameId)
+        this.animFrameId = null
+        this.updateDisplay()
+        return
+      }
       this.updateDisplay()
     }
     this.animFrameId = requestAnimationFrame(t => this.loop(t))
