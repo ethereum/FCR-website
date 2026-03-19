@@ -548,7 +548,7 @@
                 <span class="faq-icon text-primary text-xl font-light">+</span>
               </summary>
               <div class="pt-2 text-text-muted text-sm leading-relaxed">
-                The safe tag always returns the last fast-confirmed block. If FCR stalls (e.g., due to poor network conditions), it simply stops advancing — the tag continues to return the most recent block that was confirmed. There is no error state; the response is always a valid block.
+                The safe tag always returns the last fast-confirmed block. If FCR stalls (e.g., due to poor network conditions), it simply stops advancing — the tag continues to return the most recent block that was confirmed or the most recent finalized block if FCR reverted to finality. There is no error state; the response is always a valid block.
               </div>
             </details>
 
