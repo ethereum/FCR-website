@@ -377,7 +377,7 @@
         <div class="space-y-4">
           <h3 class="text-primary text-3xl md:text-4xl lg:text-5xl font-extrabold">Assumptions</h3>
           <p class="text-text-muted text-sm md:text-base max-w-3xl">
-            FCR relies on two assumptions. When either breaks, it falls back to finality. Under rare conditions, a briefly-confirmed block may be reorganized.
+            FCR relies on two assumptions. When it detects that either breaks, it falls back to finality. Under rare conditions, a briefly-confirmed block may be reorganized.
           </p>
         </div>
 
@@ -388,7 +388,7 @@
               <div class="text-primary text-sm font-medium tracking-wider">ASSUMPTION 01</div>
               <h4 class="text-primary text-2xl md:text-3xl font-bold">Communication model (synchrony)</h4>
               <p class="text-text-muted text-sm md:text-base max-w-[600px]">
-                FCR requires attestations to arrive within the synchrony bound. If the network becomes asynchronous, FCR falls back to the finalized block. In rare cases, brief asynchrony may go undetected — a confirmed block could be reorganized before the fallback triggers.
+                FCR requires attestations to be received by all honest validators by the end of the slot in which they are sent.
               </p>
             </div>
             <!-- <div id="sim-async-container"></div> -->
@@ -400,7 +400,7 @@
               <div class="text-primary text-sm font-medium tracking-wider">ASSUMPTION 02</div>
               <h4 class="text-primary text-2xl md:text-3xl font-bold">Adversarial threshold (&lt;25%)</h4>
               <p class="text-text-muted text-sm md:text-base max-w-[600px]">
-                FCR requires that at least 75% of total stake is honest and participating. If adversarial stake exceeds 25%, FCR may lose liveness (stalling confirmations) or, in adversarial conditions combined with network issues, safety.
+                FCR requires that at least 75% of total stake is honest and participating.
               </p>
             </div>
             <!-- <div id="sim-adversary-container"></div> -->
@@ -498,7 +498,8 @@
                 <span class="faq-icon text-primary text-xl font-light">+</span>
               </summary>
               <div class="pt-2 text-text-muted text-sm leading-relaxed">
-                There are two distinct failure modes. <strong>Liveness failure</strong> (most common): if attestations are delayed or too few validators participate, FCR simply stalls — it stops confirming new blocks and resets to the last finalized block. No incorrect confirmation is issued. <strong>Safety failure</strong> (extreme): if an adversary controls &gt;50% of active validators, a confirmed block could theoretically be reorged. This requires exceptional circumstances far beyond normal network disruption.
+                In most of the scenarios, FCR would just stall and eventually revert to finality.
+                In some extreme circumstances, this could lead to Fast Confirmed block being reorged.
               </div>
             </details>
 
@@ -508,7 +509,10 @@
                 <span class="faq-icon text-primary text-xl font-light">+</span>
               </summary>
               <div class="pt-2 text-text-muted text-sm leading-relaxed">
-                An adversary controlling more than 25% of validators can cause FCR to stall — this is a liveness failure, not a safety failure. Your confirmation is delayed, but no incorrect confirmation is ever issued. To actually reorg a confirmed block would require &gt;50% of active validators. There is no slashing penalty for liveness failures, since stalling does not violate any protocol rule.
+                An adversary controlling more than 5% of the stake can cause FCR to be delayed.
+                The delay depends on the percentage controlled.
+                For example, if the adversary controls 15% of the stake, it can delay Fast Confirmations by one additional slot meaning that Fast Confirmation would take two slots.
+                If it controls 18% of the stake, by two additional slots; if it controls 20% of the stake, by three additional slots.
               </div>
             </details>
 
