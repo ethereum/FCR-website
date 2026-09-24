@@ -18,9 +18,18 @@ The Fast Confirmation Rule (FCR) is a consensus client feature that provides sin
 
 ## How It Works
 
-1. Enable the fast confirmation flag on your consensus client (e.g., `lighthouse bn --fast-confirmation-rule`)
+1. Enable the fast confirmation flag on your consensus client (e.g., `lodestar beacon --chain.fastConfirmation`)
 2. Query `eth_getBlockByNumber("safe")` via JSON-RPC
 3. The `safe` block tag returns the last fast-confirmed block
+
+## Client Support
+
+- **Lodestar**: Implemented, behind the `--chain.fastConfirmation` flag (experimental, disabled by default)
+- **Lighthouse**: In development
+- **Prysm**: In development
+- **Teku**: In development
+
+Standardized specifications are being integrated into the Ethereum consensus specs (consensus-specs PR #4747).
 
 ## Use Cases
 
