@@ -11,6 +11,7 @@ export default {
       input: {
         main: resolve(__dirname, 'index.html'),
         design: resolve(__dirname, 'design.html'),
+        docsProduction: resolve(__dirname, 'docs/production/index.html'),
       },
     },
   },

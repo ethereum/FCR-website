@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A practical guide to FCR — confirm L1 transactions 30x faster than finality | Fast Confirmation Rule</title>
+    <meta name="description" content="A plain-language guide to using the Fast Confirmation Rule in production: what FCR is for, how it works, how it can fail, and how to harden it." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://fastconfirm.it/docs/production" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://fastconfirm.it/docs/production" />
+    <meta property="og:title" content="A practical guide to FCR — confirm L1 transactions 30x faster than finality" />
+    <meta property="og:description" content="What FCR is for, how it works, how it can fail, and how to use it in production." />
+    <meta property="og:image" content="https://fastconfirm.it/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Fast Confirmation Rule" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="A practical guide to FCR — confirm L1 transactions 30x faster than finality" />
+    <meta name="twitter:description" content="What FCR is for, how it works, how it can fail, and how to use it in production." />
+    <meta name="twitter:image" content="https://fastconfirm.it/og-image.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#f05f36" />
+
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body class="bg-primary min-h-screen p-2 md:p-8 lg:p-16">
+    <div class="bg-background rounded-2xl md:rounded-[50px] w-full max-w-[1400px] mx-auto">
+      <header class="px-6 md:px-16 pt-8 md:pt-12">
+        <a href="/" class="inline-flex flex-col text-primary hover:text-primary-dark transition-colors">
+          <span class="text-2xl font-bold tracking-tight">FCR</span>
+          <span class="text-[9px] md:text-[10px] font-light uppercase" style="letter-spacing:2px;">Fast Confirmation Rule</span>
+        </a>
+      </header>
+
+      <main class="px-6 md:px-16 pb-16 md:pb-24">
+        <article class="doc-prose mx-auto max-w-[760px] pt-10 md:pt-16">
+          <div class="text-primary text-xs font-medium tracking-wider uppercase mb-4">Docs · Production</div>
+          <h1>A practical guide to FCR — how to confirm L1 transactions 30x faster than finality</h1>
+          <p>The Fast Confirmation Rule (FCR) is an algorithm for confirming Ethereum L1 blocks with guarantees strong enough to resemble finality, and with only 12-24s in latency, 30x faster than finality.</p>
+          <p>In this document, we will explain the following in plain language:</p>
+          <ul>
+          <li>What is FCR for?</li>
+          <li>How does FCR work?</li>
+          <li>How can FCR fail?</li>
+          <li>How to use FCR in production?</li>
+          </ul>
+          <p>Our headline conclusion is that <strong>FCR is ready for production, and is a great replacement for k-deep and justification in almost all cases, and a reasonable replacement for finality in many cases</strong>.</p>
+          <p>Note that in the following discussions, because we opt for using plain language, we will necessarily be technically imprecise. Nevertheless we seek to be technically precise <em>enough</em> that you can make the correct <em>production decisions</em> about FCR. For a completely precise technical treatment we refer you to the <a href="https://arxiv.org/abs/2405.00549" target="_blank" rel="noopener noreferrer">FCR paper</a>.</p>
+          <nav class="doc-toc" aria-label="Contents"><div class="doc-toc-title">Contents</div><ol><li><a href="#background">Background</a></li><li><a href="#what-fcr-is-for">What FCR is for</a></li><li><a href="#how-fcr-works">How FCR works</a></li><li><a href="#how-fcr-can-fail">How FCR can fail</a></li><li><a href="#how-fcr-can-reorg">How FCR can reorg</a></li><li><a href="#practical-risks-of-fcr">Practical risks of FCR</a></li><li><a href="#hardening-fcr-in-production">Hardening FCR in production</a></li><li><a href="#conclusion">Conclusion</a></li></ol></nav>
+          <h2 id="background">Background</h2>
+          <p>When you query an Ethereum RPC such as <code>eth_getBalance</code>, you can often specify a “block parameter” with values such as <code>latest</code>, <code>safe</code>, and <code>finalized</code>.  This tells the RPC which block you are referring to.  Currently, the block parameters are interpreted as such:</p>
+          <ul>
+          <li><code>latest</code> is the latest block aka the “head” of the current chain.</li>
+          <li><code>safe</code> is the latest “justified” block on the current chain.  A block needs to be at least 32 blocks deep before it can be justified.</li>
+          <li><code>finalized</code> is the latest “finalized” block on the current chain.  A block needs to be at least 64 blocks deep before it can be finalized.</li>
+          </ul>
+          <p>Many economically valuable applications don’t rely on the <code>latest</code> block, for fear that it might “re-org” — meaning that the block can “disappear” after getting confirmed if the chain ends up selecting a different fork.  Therefore, these applications typically fall back to <code>safe</code> or <code>finalized</code>, which introduce 6-14 minutes of latency, or wait for K blocks (aka “k-deep”) where K is typically 10 or more, which also introduces significant latency.</p>
+          <h2 id="what-fcr-is-for">What FCR is for</h2>
+          <p>If a consensus client implements and enables FCR, it will now interpret the <code>safe</code> tag as “fast confirmed” (which takes 1-2 blocks), instead of justifications (which take 32+ blocks).  In practice, this means a block can become <code>safe</code> in just 12-24 seconds, down from 6 minutes.  Therefore, applications such as bridges, exchanges, and L2s can get a huge speed boost by enabling FCR.</p>
+          <h2 id="how-fcr-works">How FCR works</h2>
+          <p>At its core, FCR is a very simple idea: if I as a consensus client see overwhelming support for a block, I can locally “fast confirm” the block and trust that the block will <em>never</em> reorg.  Specifically, FCR confirms a block only if the block receives validator attestations totaling more than 95% weight of the slot’s committee.</p>
+          <p>In other words, FCR takes advantage of the fact that, most of the time, most validators will vote for the same block, so we can determine with mathematical certainty that the block will be finalized later.</p>
+          <p>But what if a block does not receive support from an overwhelming majority of validators?  And could a block receive overwhelming support, but still fail to be finalized?  Let’s talk about these failure modes next.</p>
+          <h2 id="how-fcr-can-fail">How FCR can fail</h2>
+          <p>FCR can fail in two ways:</p>
+          <ul>
+          <li><strong>Liveness failure:</strong> FCR can fail to confirm a new block, so you have to fall back to justification and/or finality in order to confirm it.</li>
+          <li><strong>Safety failure:</strong> FCR can confirm a block that later gets re-orged.</li>
+          </ul>
+          <p>In general, safety failures are much more costly.  For example, if a mint-and-burn bridge mints tokens on one side while the burn event on the other side gets re-orged, the token supply is now messed up.  On the other hand, liveness failure typically only results in UX degradation, e.g. the bridging simply takes a longer time to complete.</p>
+          <p>Because safety failures are so much more costly than liveness failures, FCR is designed to be much more resilient to safety failures than to liveness failures.  In other words, FCR will never re-org except under extreme conditions (see below), but it may sometimes stall if the network conditions are heavily degraded, in which case FCR automatically falls back to finality.  Thankfully, historically data suggest that <a href="https://x.com/fradamt/status/2077760556681797872" target="_blank" rel="noopener noreferrer">liveness is not a problem in practice</a> because mainnet network conditions are so good most of the time.</p>
+          <h2 id="how-fcr-can-reorg">How FCR can reorg</h2>
+          <p>In general, an adversary may be able to cause a fast-confirmed block to reorg under one or both of the following conditions:</p>
+          <ul>
+          <li>If the adversary controls &gt;25% stake</li>
+          <li>If the adversary causes the network to partition in a very precise way</li>
+          </ul>
+          <p>We will attempt to explain these reorg scenarios in plain language, while acknowledging that it’s impossible to do so without losing some technical nuances.</p>
+          <p>Once again, we want to frontrun the technical writing with a high-level conclusion: <strong>based on past year’s mainnet data, the conditions that would cause FCR to reorg have not happened, and it’s extremely unlikely for them to happen in the future</strong>.  While it’s impossible to pinpoint the exact likelihood, we feel confident saying that it’s about as unlikely for an fast-confirmed block to re-org as it is for a justified block to re-org.  Which is to say that the applications that rely on <code>safe</code> (justified) today would generally not be worse off if <code>safe</code> points to fast-confirmed blocks instead.</p>
+          <p>Now let’s examine each of the reorg scenarios.  Feel free to skip over the following sections if you are not interested in the gory technical details.</p>
+          <h3 id="large-adversarial-stake">Large adversarial stake</h3>
+          <p>For FCR’s safety property to hold, the adversary may not control more than 25% total stake.  More precisely, the adversary may not control more than 25% total stake in each committee over a span of consecutive committees, but due to the way committee sampling works, in practice it’s basically impossible for an adversary to “luck into” more than 25% stake in any committee unless they hold close to 25% total stake, so it suffices to simplify this requirement to “less than 25% total stake.”</p>
+          <p>How can an adversary attack FCR if they control 25% or more total stake?  The images below illustrate an attack scenario.</p>
+          <figure><img src="/docs/production/fcr-observer-view.png" alt="Observer confirms block B: 69.5% honest plus 26% adversarial votes give B 95.5% support, while B′ has 4.5%." loading="lazy" /></figure>
+          
+          <p>In slot t, we observe 95.5% votes for block B, so we fast confirm it.  However, 26% of the votes are actually adversarial, but we don’t know that.</p>
+          <figure><img src="/docs/production/fcr-honest-voters-view.png" alt="Honest validators’ view in slot t+1: the adversarial votes and proposer boost give B′ more support than B." loading="lazy" /></figure>
+          
+          <p>In slot t+1, honest validators vote for B’ because from their perspective, they never received the 26% vote for B, but rather they received the 26% vote for B’ (since the adversary double-voted for both B and B’).  Now, the math works out such that B’ has more support than B from the perspective of honest validators, because of a mechanism called “proposer boost” where the proposer (which the attacker controls) can add 40% weight to their proposal.  So honest validators vote for B’ instead of B, causing the fast confirmation of B to re-org.</p>
+          <p>Note that for this attack to work, it’s not enough that the attacker controls more than 25% stake.  They must also have precise control over the network such that their 26% votes for B’ do not arrive at the observer by slot t, while their 26% votes for B do not arrive at honest validators by slot t+1.  It’s almost impossible for this to happen in practice since Ethereum validators are connected through a randomized P2P network.</p>
+          <h3 id="network-asynchrony">Network asynchrony</h3>
+          <p>FCR’s safety properties are proven under a theoretical network model known as “network synchrony,” which roughly means that a message received by any honest validator will be received by all honest validators within a bounded amount of time.</p>
+          <p>While this assumption sounds strong — what if just one honest validator goes offline? — keep in mind that any honest validator that experiences network issues can simply be counted as an adversarial (aka “byzantine”) validator, at which point they can simply be counted towards the 25% cap mentioned in the last section.  In other words, in practice you really need to have more than 25% of validators either experiencing network issues or being adversarial for this synchrony model to be considered broken.</p>
+          <p>Now, how can an adversary carry out attacks if synchrony breaks?  The simplest example would be an “eclipse attack.”  Here, the attacker somehow manages to take over all the P2P connections from your node, so everyone you talk to is an adversary.  Now, since attestations are signed, just because the adversary controls your connected nodes (i.e. “neighbors”) doesn’t mean that they can fake attestations — honest validators still need to honestly attest to a fork.</p>
+          <p>Furthermore, since the network is a gossip network, honest validators will always be able to propagate their attestations across the entire network, UNLESS the honest validators themselves are eclipsed too.  In other words, for the attacker to create a scenario where only you see the attestations from some honest validators but not others, the attacker must eclipse both you and the honest validators.  If the attacker is able to do that, then you may be fast-confirming a block that has received overwhelming support from your perspective, but from other nodes’ perspective did not receive that much support.  So you could be fast-confirming a block while other nodes build on a competing branch.</p>
+          <p>Eclipsing the observer alone does not prevent a connected honest validator from gossiping the same votes to the rest of the network.</p>
+          <figure><img src="/docs/production/fcr-eclipse-attack.png" alt="Eclipse attack: the adversary relays an honest validator’s vote to the observer but blocks it from reaching the rest of the network." loading="lazy" /></figure>
+          
+          <p>Once again, this attack mode is mostly theoretical because the Ethereum validator network is a randomized P2P network, so it’s extremely unlikely that any attacker could eclipse both you and enough validators to cause your fast confirmation to re-org.</p>
+          <h2 id="practical-risks-of-fcr">Practical risks of FCR</h2>
+          <p>In the section above, we examined the <em>theoretical risks</em> of FCR — what could happen that would invalidate FCR’s safety guarantees.  As we explained, the scenarios that would break FCR’s safety guarantees have never happened before and are extremely unlikely to happen in the future.  While it’s hard to pinpoint the exact likelihood, we feel comfortable saying that FCR is nearly as safe as finality, about as safe as justification, and much safer than K-deep (even with a large K).</p>
+          <p>While we feel confident advising applications to build on FCR, we want to point out that FCR has some <em>practical risks</em> that must be taken into account.</p>
+          <ul>
+          <li>FCR client implementations are new, and have not been as heavily tested / audited as the implementations for justification/finality.</li>
+          <li>FCR client implementations have a much larger “bug surface” than justification/finality.</li>
+          </ul>
+          <p>The second point deserves some elaboration.  A block’s justification/finalization status is derived from on-chain data.  The client implementation simply interprets the on-chain data to find out the justification/finalization status of a block.  Such derivation is very simple, so its implementation is unlikely to be faulty.</p>
+          <p>On the other hand, FCR is an algorithm that runs over a combination of on-chain state and network messages.  Recall that FCR literally counts the “votes” from validators and check if they add up to more than 95% of total committee weight, and these votes are network messages.  Therefore, the bug surface for FCR implementations is larger than that of justification/finality, due to the input sources being less pure and the algorithm being more complicated.</p>
+          <p>It’s therefore our view that, at this point in time, <strong>FCR’s practical risks far dominate its theoretical risks and are the primary risks that users must account for.</strong>  We therefore advise FCR users to adopt the following measures when using FCR in production.</p>
+          <h2 id="hardening-fcr-in-production">Hardening FCR in production</h2>
+          <h3 id="aggregating-results-from-multiple-fcr-implementations">Aggregating results from multiple FCR implementations</h3>
+          <p>To mitigate risks from buggy FCR implementations, we strongly recommend the following approach:</p>
+          <ul>
+          <li>Use multiple consensus clients and/or external RPCs, and trust a FCR confirmation only if all clients and RPCs agree.</li>
+          </ul>
+          <p>This ensures that a bug in a single client implementation or RPC does not cause a false confirmation.</p>
+          <h3 id="bounding-the-risks-of-fcr">Bounding the risks of FCR</h3>
+          <p>In addition, applications may also consider the following approaches to further manage risks, though we do not deem these necessary:</p>
+          <ul>
+          <li>For extremely large transfer amounts, fall back to finality.</li>
+          <li>Use FCR in parallel with K-deep where K is a small number such as 3, so that a block is considered confirmed only if FCR confirms it AND it receives K confirmations.</li>
+          </ul>
+          <p>The first approach bounds the value at risk if FCR fails.</p>
+          <p>The second approach ensures that if FCR yields an obviously false result, it can be filtered out by K-deep which serves as a sanity check.</p>
+          <h2 id="conclusion">Conclusion</h2>
+          <p>Ethereum is currently working towards faster finality, with an endgame of reaching finality in 1 to 2 slots.  When we get to that endgame, finality should become the the default confirmation mechanism for Ethereum blocks, but until then, we believe FCR is the best confirmation mechanism for most applications, due to its great combination of strong security guarantees and low latency.</p>
+          <p>However, since FCR implementations are new, we recommend that high-value applications adopt FCR with a multi-client approach.  If we can help your project adopt FCR, please get in touch!</p>
+        </article>
+      </main>
+
+      <footer class="px-6 md:px-16 pb-10 md:pb-14">
+        <div class="mx-auto max-w-[760px] border-t border-primary/15 pt-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <a href="/" class="text-primary text-sm font-medium hover:text-primary-dark">&larr; Back to fastconfirm.it</a>
+          <div class="flex flex-wrap gap-6">
+            <a href="https://arxiv.org/abs/2405.00549" target="_blank" rel="noopener noreferrer" class="text-text-muted text-xs font-medium hover:text-primary transition-colors">TECHNICAL REPORT</a>
+            <a href="https://github.com/ethereum/consensus-specs/pull/4747" target="_blank" rel="noopener noreferrer" class="text-text-muted text-xs font-medium hover:text-primary transition-colors">GITHUB</a>
+            <a href="mailto:fastconfirm@ethereum.org" class="text-text-muted text-xs font-medium hover:text-primary transition-colors">CONTACT</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
