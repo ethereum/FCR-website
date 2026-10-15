@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A practical guide to FCR — confirm L1 transactions 30x faster than finality | Fast Confirmation Rule</title>
+    <meta name="description" content="A plain-language guide to using the Fast Confirmation Rule in production: what FCR is for, how it works, how it can fail, and how to harden it." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://fastconfirm.it/docs/production" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://fastconfirm.it/docs/production" />
+    <meta property="og:title" content="A practical guide to FCR — confirm L1 transactions 30x faster than finality" />
+    <meta property="og:description" content="What FCR is for, how it works, how it can fail, and how to use it in production." />
+    <meta property="og:image" content="https://fastconfirm.it/og-fcr.png" />
+    <meta property="og:image:alt" content="FCR — 24-second illustrative headline; about 12–24 seconds under stated assumptions. Fast confirmation is not finality." />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Fast Confirmation Rule" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="A practical guide to FCR — confirm L1 transactions 30x faster than finality" />
+    <meta name="twitter:description" content="What FCR is for, how it works, how it can fail, and how to use it in production." />
+    <meta name="twitter:image" content="https://fastconfirm.it/og-fcr.png" />
+
+    <meta name="twitter:image:alt" content="FCR — fast Ethereum confirmations under stated assumptions. Fast confirmation is not finality." />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#f05f36" />
+
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body class="bg-primary min-h-screen p-2 md:p-8 lg:p-16">
+    <a href="#guide" class="skip-link">Skip to guide</a>
+    <div class="bg-background rounded-2xl md:rounded-[50px] w-full max-w-[1400px] mx-auto">
+      <header id="header" class="sticky top-0 z-50 site-header">
+        <div class="flex items-center justify-between bg-background py-4 border-b-2 border-transparent transition-all duration-300" id="header-inner">
+          <a href="/" aria-label="FCR home" class="flex flex-col min-[1200px]:flex-row min-[1200px]:items-baseline min-[1200px]:gap-2">
+            <span class="text-primary text-3xl md:text-4xl font-bold tracking-tight">FCR</span>
+            <span id="header-subtitle" class="text-primary text-[9px] md:text-[10px] font-light uppercase transition-all duration-300" style="letter-spacing:2px;">Fast Confirmation Rule</span>
+          </a>
+          <div class="hidden lg:flex items-center gap-8">
+            <nav id="header-nav" class="flex items-center gap-6 transition-all duration-300">
+              <a href="/#overview-stats" class="nav-link text-xs font-medium tracking-wide">OVERVIEW</a>
+              <a href="/#use-cases" class="nav-link text-xs font-medium tracking-wide">USE CASES</a>
+              <a href="/#risk" class="nav-link text-xs font-medium tracking-wide">TRADE-OFFS</a>
+              <a href="/#implement" class="nav-link text-xs font-medium tracking-wide">IMPLEMENT</a>
+              <a href="/docs/production" aria-current="page" class="nav-link text-xs font-medium tracking-wide">Docs</a>
+              <a href="/#faq" class="nav-link text-xs font-medium tracking-wide">FAQ</a>
+            </nav>
+            <a href="https://fastconfirm.paperform.co/" target="_blank" rel="noopener noreferrer" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-full hover:bg-primary-dark transition-colors whitespace-nowrap">
+              Get in Touch
+            </a>
+          </div>
+          <!-- Hamburger button (mobile) -->
+          <button id="menu-toggle" class="lg:hidden flex flex-col justify-center items-center w-10 h-10 gap-1.5" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu">
+            <span class="hamburger-line block w-6 h-0.5 bg-primary transition-all duration-300"></span>
+            <span class="hamburger-line block w-6 h-0.5 bg-primary transition-all duration-300"></span>
+            <span class="hamburger-line block w-6 h-0.5 bg-primary transition-all duration-300"></span>
+          </button>
+        </div>
+        <!-- Mobile menu -->
+        <nav id="mobile-menu" class="lg:hidden hidden flex-col bg-background pb-6 border-b-2 border-primary/10">
+          <a href="/#overview-stats" class="mobile-nav-link text-primary text-sm font-medium tracking-wide py-3 hover:text-primary-dark">OVERVIEW</a>
+          <a href="/#use-cases" class="mobile-nav-link text-primary text-sm font-medium tracking-wide py-3 hover:text-primary-dark">USE CASES</a>
+          <a href="/#risk" class="mobile-nav-link text-primary text-sm font-medium tracking-wide py-3 hover:text-primary-dark">TRADE-OFFS</a>
+          <a href="/#implement" class="mobile-nav-link text-primary text-sm font-medium tracking-wide py-3 hover:text-primary-dark">IMPLEMENT</a>
+          <a href="/docs/production" class="mobile-nav-link text-primary text-sm font-medium tracking-wide py-3">Docs</a>
+          <a href="/#faq" class="mobile-nav-link text-primary text-sm font-medium tracking-wide py-3 hover:text-primary-dark">FAQ</a>
+          <a href="https://fastconfirm.paperform.co/" target="_blank" rel="noopener noreferrer" class="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-full hover:bg-primary-dark transition-colors text-center mt-4">
+            Get in Touch
+          </a>
+        </nav>
+      </header>
+
+      <main id="guide" class="px-6 md:px-16 pb-16 md:pb-24">
+        <article class="doc-prose mx-auto max-w-[760px] pt-10 md:pt-16">
+          <div class="text-primary text-xs font-medium tracking-wider uppercase mb-4">Docs · Production</div>
+          <aside class="review-note" aria-label="Draft content status"><strong>Draft for technical review.</strong> Prepared from <a href="https://github.com/ethereum/FCR-website/pull/23">PR #23, dated 30 September 2026</a>. Reconciliation with Derek’s current source is outstanding. The validator-sampling passage below is unresolved; do not use this draft as a final production security specification.</aside>
+          <h1>A practical guide to FCR — how to confirm L1 transactions 30x faster than finality</h1>
+          <p>The Fast Confirmation Rule (FCR) is an algorithm for confirming Ethereum L1 blocks in about 12–24 seconds under its network and stake assumptions. It is complementary to finality, with different guarantees. “30x” is an approximate comparison: 24 seconds against 13 minutes (780 seconds) is 32.5× faster, or about 97% less waiting. It is not a latency upper bound.</p>
+          <p>In this document, we will explain the following in plain language:</p>
+          <ul>
+          <li>What is FCR for?</li>
+          <li>How does FCR work?</li>
+          <li>How can FCR fail?</li>
+          <li>How to use FCR in production?</li>
+          </ul>
+          <p>The September 30 guide recommends FCR for production applications that accept its assumptions, as an alternative to k-deep or justification and, for some policies, waiting for finality. <strong>Assess the risks and production hardening below before adopting it; fast confirmation is not finality.</strong></p>
+          <p>Note that in the following discussions, because we use plain language, we simplify technical details. Nevertheless we seek to be technically precise <em>enough</em> that you can make the correct <em>production decisions</em> about FCR. For a completely precise technical treatment we refer you to the <a href="https://arxiv.org/abs/2405.00549" target="_blank" rel="noopener noreferrer">FCR paper</a>.</p>
+          <nav class="doc-toc" aria-label="Contents"><div class="doc-toc-title">Contents</div><ol><li><a href="#background">Background</a></li><li><a href="#what-fcr-is-for">What FCR is for</a></li><li><a href="#how-fcr-works">How FCR works</a></li><li><a href="#how-fcr-can-fail">Liveness and safety failures</a></li><li><a href="#how-fcr-can-reorg">Reorg scenarios</a></li><li><a href="#large-adversarial-stake">Adversarial stake and sampling review</a></li><li><a href="#network-asynchrony">Network asynchrony</a></li><li><a href="#practical-risks-of-fcr">Practical implementation risks</a></li><li><a href="#hardening-fcr-in-production">Production hardening</a></li><li><a href="#conclusion">Conclusion</a></li><li><a href="#sources">Sources and review status</a></li></ol></nav>
+          <h2 id="background">Background</h2>
+          <p>When you query an Ethereum RPC such as <code>eth_getBalance</code>, you can often specify a “block parameter” with values such as <code>latest</code>, <code>safe</code>, and <code>finalized</code>.  This tells the RPC which block you are referring to.  Without FCR enabled, these block parameters generally mean the following (confirm the semantics with your provider):</p>
+          <ul>
+          <li><code>latest</code> is the latest block aka the “head” of the current chain.</li>
+          <li><code>safe</code> is the latest “justified” block on the current chain.  Justification occurs at epoch checkpoints after a supermajority link, rather than after a fixed depth for every block.</li>
+          <li><code>finalized</code> is the latest “finalized” block on the current chain.  Finalization follows Casper FFG’s checkpoint rules; elapsed time depends on checkpoint position and participation.</li>
+          </ul>
+          <p>Many economically valuable applications don’t rely on the <code>latest</code> block, for fear that it might “re-org” — meaning that the block can “disappear” after getting confirmed if the chain ends up selecting a different fork.  Therefore, these applications typically fall back to <code>safe</code> or <code>finalized</code>, which introduce minutes of latency, or wait for K blocks (aka “k-deep”) where K is typically 10 or more, which also introduces significant latency.</p>
+          <h2 id="what-fcr-is-for">What FCR is for</h2>
+          <p>Where the consensus client implements and enables FCR and the provider exposes it through <code>safe</code>, that tag can advance on fast confirmation rather than waiting for justification. In favorable conditions, the guide estimates about 12–24 seconds (1–2 slots). Confirm your provider’s semantics; this is not a universal RPC behavior or a latency upper bound.  Therefore, applications such as bridges, exchanges, and L2s can get a huge speed boost by enabling FCR.</p>
+          <h2 id="how-fcr-works">How FCR works</h2>
+          <p>At its core, FCR is a very simple idea: if I as a consensus client see overwhelming support for a block, I can locally “fast confirm” the block and trust that the block will remain canonical <em>if the rule’s safety assumptions hold</em>.  Specifically, FCR confirms a block only if the block receives validator attestations totaling more than 95% weight of the slot’s committee.</p>
+          <p>In other words, FCR takes advantage of the fact that, most of the time, most validators will vote for the same block, so we can obtain a confirmation guarantee under the formal rule’s assumptions; this is not unconditional finality.</p>
+          <p>But what if a block does not receive support from an overwhelming majority of validators?  And could a block receive overwhelming support, but still fail to be finalized?  Let’s talk about these failure modes next.</p>
+          <h2 id="how-fcr-can-fail">How FCR can fail</h2>
+          <p>FCR can fail in two ways:</p>
+          <ul>
+          <li><strong>Liveness failure:</strong> FCR can fail to confirm a new block, so you have to fall back to justification and/or finality in order to confirm it.</li>
+          <li><strong>Safety failure:</strong> FCR can confirm a block that later gets re-orged.</li>
+          </ul>
+          <p>In general, safety failures are much more costly.  For example, if a mint-and-burn bridge mints tokens on one side while the burn event on the other side gets re-orged, the token supply is now messed up.  On the other hand, liveness failure typically only results in UX degradation, e.g. the bridging simply takes a longer time to complete.</p>
+          <p>Because safety failures are so much more costly than liveness failures, FCR is designed to be much more resilient to safety failures than to liveness failures.  In other words, FCR’s safety guarantee depends on the assumptions discussed below, but it may sometimes stall if the network conditions are heavily degraded, in which case the application should wait or follow its documented finality fallback policy.  Thankfully, historical data suggest that <a href="https://x.com/fradamt/status/2077760556681797872" target="_blank" rel="noopener noreferrer">liveness is not a problem in practice</a> because mainnet network conditions are so good most of the time.</p>
+          <h2 id="how-fcr-can-reorg">How FCR can reorg</h2>
+          <p>In general, an adversary may be able to cause a fast-confirmed block to reorg under one or both of the following conditions:</p>
+          <ul>
+          <li>If adversarial weight violates the rule’s relevant committee bounds (the total-stake sampling explanation below is under review)</li>
+          <li>If the adversary causes the network to partition in a very precise way</li>
+          </ul>
+          <p>We will attempt to explain these reorg scenarios in plain language, while acknowledging that it’s impossible to do so without losing some technical nuances.</p>
+          <p>Once again, we want to frontrun the technical writing with a high-level conclusion: <strong>the September 30 draft argues that these attack scenarios are unlikely in practice; that empirical assessment and its supporting data require author review</strong>.  While it’s impossible to pinpoint the exact likelihood, the earlier draft compares FCR’s risk to justification; that comparison is an assessment, not an unconditional guarantee.  Which is to say that the applications that rely on <code>safe</code> (justified) today would generally not be worse off if <code>safe</code> points to fast-confirmed blocks instead.</p>
+          <p>Now let’s examine each of the reorg scenarios.  Feel free to skip over the following sections if you are not interested in the gory technical details.</p>
+          <h3 id="large-adversarial-stake">Large adversarial stake</h3>
+          <aside class="review-note" id="validator-sampling-review"><strong>Unresolved source passage — Derek / Francesco review required.</strong><p>The current source is reported to contain two overlapping introductions here. The newer paragraph distinguishes vanilla from consolidated validators and ends mid-sentence:</p><blockquote>“an adversary with 17% total stake would on average control 25%”</blockquote><p>The missing statistic has not been supplied. The older paragraph equates a committee-weight bound with a total-stake bound; that simplification has not been selected as authoritative. Resolve the sampling model, complete the sentence and reconcile the duplicated paragraphs before publication. The diagrams below preserve the September 30 illustrative attack, not a verified total-stake threshold.</p></aside>
+          <p>How can an adversary attack FCR when the relevant committee-weight bound is violated?  The images below illustrate an attack scenario.</p>
+          <figure><img src="/docs/production/fcr-observer-view.png" width="1438" height="996" alt="Observer confirms block B: 69.5% honest plus 26% adversarial votes give B 95.5% support, while B′ has 4.5%." loading="lazy" /><figcaption>Illustrative observer view: the September 30 draft counts 95.5% support for B.</figcaption></figure>
+          
+          <p>In slot t, we observe 95.5% votes for block B, so we fast confirm it.  However, 26% of the votes are actually adversarial, but we don’t know that.</p>
+          <figure><img src="/docs/production/fcr-honest-voters-view.png" width="1404" height="996" alt="Honest validators’ view in slot t+1: the adversarial votes and proposer boost give B′ more support than B." loading="lazy" /><figcaption>Illustrative validator view: withheld and equivocated votes plus proposer boost favor B′.</figcaption></figure>
+          
+          <p>In slot t+1, honest validators vote for B’ because from their perspective, they never received the 26% vote for B, but rather they received the 26% vote for B’ (since the adversary double-voted for both B and B’).  Now, the math works out such that B’ has more support than B from the perspective of honest validators, because of a mechanism called “proposer boost” where the proposer (which the attacker controls) can add 40% weight to their proposal.  So honest validators vote for B’ instead of B, causing the fast confirmation of B to re-org.</p>
+          <p>Note that for this attack to work, it’s not enough that the attacker controls the illustrated adversarial committee weight.  They must also have precise control over the network such that their 26% votes for B’ do not arrive at the observer by slot t, while their 26% votes for B do not arrive at honest validators by slot t+1.  It’s almost impossible for this to happen in practice since Ethereum validators are connected through a randomized P2P network.</p>
+          <h3 id="network-asynchrony">Network asynchrony</h3>
+          <p>FCR’s safety properties are proven under a theoretical network model known as “network synchrony,” which roughly means that a message received by any honest validator will be received by all honest validators within a bounded amount of time.</p>
+          <p>While this assumption sounds strong — what if just one honest validator goes offline? — keep in mind that any honest validator that experiences network issues can simply be counted as an adversarial (aka “byzantine”) validator, but the precise accounting must follow the paper’s network and committee assumptions.  Do not equate a percentage of validator identities with the same percentage of stake; committee sampling and consolidated balances require separate analysis.</p>
+          <p>Now, how can an adversary carry out attacks if synchrony breaks?  The simplest example would be an “eclipse attack.”  Here, the attacker somehow manages to take over all the P2P connections from your node, so everyone you talk to is an adversary.  Now, since attestations are signed, just because the adversary controls your connected nodes (i.e. “neighbors”) doesn’t mean that they can fake attestations — honest validators still need to honestly attest to a fork.</p>
+          <p>Furthermore, since the network is a gossip network, honest validators will always be able to propagate their attestations across the entire network, UNLESS the honest validators themselves are eclipsed too.  In other words, for the attacker to create a scenario where only you see the attestations from some honest validators but not others, the attacker must eclipse both you and the honest validators.  If the attacker is able to do that, then you may be fast-confirming a block that has received overwhelming support from your perspective, but from other nodes’ perspective did not receive that much support.  So you could be fast-confirming a block while other nodes build on a competing branch.</p>
+          <p>Eclipsing the observer alone does not prevent a connected honest validator from gossiping the same votes to the rest of the network.</p>
+          <figure><img src="/docs/production/fcr-eclipse-attack.png" width="2566" height="1424" alt="Eclipse attack: the adversary relays an honest validator’s vote to the observer but blocks it from reaching the rest of the network." loading="lazy" /><figcaption>Illustrative network partition: selective message delivery gives the observer and network different views.</figcaption></figure>
+          
+          <p>Once again, this attack mode is mostly theoretical because the Ethereum validator network is a randomized P2P network, so it’s extremely unlikely that any attacker could eclipse both you and enough validators to cause your fast confirmation to re-org.</p>
+          <h2 id="practical-risks-of-fcr">Practical risks of FCR</h2>
+          <p>In the section above, we examined the <em>theoretical risks</em> of FCR — what could happen that would invalidate FCR’s safety guarantees.  The theoretical guarantee depends on assumptions; this draft does not establish a numerical likelihood of their failure or equivalence to finality. The earlier source’s comparative risk assessment requires author review.</p>
+          <p>While we feel confident advising applications to build on FCR, we want to point out that FCR has some <em>practical risks</em> that must be taken into account.</p>
+          <ul>
+          <li>FCR client implementations are new, and have not been as heavily tested / audited as the implementations for justification/finality.</li>
+          <li>FCR client implementations have a much larger “bug surface” than justification/finality.</li>
+          </ul>
+          <p>The second point deserves some elaboration.  A block’s justification/finalization status is derived from on-chain data.  The client implementation simply interprets the on-chain data to find out the justification/finalization status of a block.  Such derivation is very simple, so its implementation is unlikely to be faulty.</p>
+          <p>On the other hand, FCR is an algorithm that runs over a combination of on-chain state and network messages.  Recall that FCR literally counts the “votes” from validators and checks if they add up to more than 95% of total committee weight, and these votes are network messages.  Therefore, the bug surface for FCR implementations is larger than that of justification/finality, due to the input sources being less pure and the algorithm being more complicated.</p>
+          <p>It’s therefore our view that, at this point in time, <strong>FCR’s practical risks far dominate its theoretical risks and are the primary risks that users must account for.</strong>  We therefore advise FCR users to adopt the following measures when using FCR in production.</p>
+          <h2 id="hardening-fcr-in-production">Hardening FCR in production</h2>
+          <h3 id="aggregating-results-from-multiple-fcr-implementations">Aggregating results from multiple FCR implementations</h3>
+          <p>To mitigate risks from buggy FCR implementations, we strongly recommend the following approach:</p>
+          <ul>
+          <li>Use multiple independent consensus client implementations and/or independent external RPC providers, and accept an FCR confirmation only when all configured sources agree on the same block hash.</li>
+          </ul>
+          <p>Requiring independent implementations and providers to agree reduces exposure to a single faulty implementation. Shared upstream infrastructure or correlated bugs can still defeat this defense. Compare block hashes, not just heights, and stop or wait for finality on disagreement or stale results.</p>
+          <h3 id="bounding-the-risks-of-fcr">Bounding the risks of FCR</h3>
+          <p>In addition, applications may also consider the following approaches to further manage risks, though we do not deem these necessary:</p>
+          <ul>
+          <li>For extremely large transfer amounts, fall back to finality.</li>
+          <li>Use FCR in parallel with K-deep where K is a small number such as 3, so that a block is considered confirmed only if FCR confirms it AND it receives K confirmations.</li>
+          </ul>
+          <p>The first approach bounds the value at risk if FCR fails.</p>
+          <p>The second approach ensures that if FCR yields an obviously false result, it can be filtered out by K-deep which serves as a sanity check.</p>
+          <h2 id="conclusion">Conclusion</h2>
+          <p>Ethereum is currently working towards faster finality, with an endgame of reaching finality in 1 to 2 slots.  When we get to that endgame, finality should become the default confirmation mechanism for Ethereum blocks, but until then, we believe FCR is the best confirmation mechanism for most applications, due to its great combination of strong security guarantees and low latency.</p>
+          <p>However, since FCR implementations are new, we recommend that high-value applications adopt FCR with a multi-client approach.  If we can help your project adopt FCR, please <a href="https://fastconfirm.paperform.co/">get in touch about adopting FCR</a>!</p>
+          <h2 id="sources">Sources and review status</h2><ul><li><a href="https://app.notion.com/p/3c76b805a71780a8a4aff498675b1461">Derek’s current source guide</a> (reconciliation outstanding).</li><li><a href="https://github.com/ethereum/FCR-website/pull/23">September 30 implementation baseline and original diagrams</a>.</li><li><a href="https://arxiv.org/abs/2405.00549v4">FCR formal paper, revision 4</a>.</li><li><a href="https://ethereum.org/en/developers/docs/consensus-mechanisms/pos/gasper/">Ethereum’s explanation of justification and finality</a>.</li></ul>
+        </article>
+      </main>
+
+      <footer class="px-6 md:px-16 pb-10 md:pb-14">
+        <div class="mx-auto max-w-[760px] border-t border-primary/15 pt-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <a href="/" class="text-primary text-sm font-medium hover:text-primary-dark">&larr; Back to fastconfirm.it</a>
+          <div class="flex flex-wrap gap-6">
+            <a href="https://arxiv.org/abs/2405.00549" target="_blank" rel="noopener noreferrer" class="text-text-muted text-xs font-medium hover:text-primary transition-colors">TECHNICAL REPORT</a>
+            <a href="https://github.com/ethereum/consensus-specs/pull/4747" target="_blank" rel="noopener noreferrer" class="text-text-muted text-xs font-medium hover:text-primary transition-colors">GITHUB</a>
+            <a href="mailto:fastconfirm@ethereum.org" class="text-text-muted text-xs font-medium hover:text-primary transition-colors">CONTACT</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

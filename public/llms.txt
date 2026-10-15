@@ -1,41 +1,25 @@
 # Fast Confirmation Rule (FCR) for Ethereum
 
-> Confirm Ethereum transactions in ~13 seconds instead of ~13 minutes. No hard fork required.
+> Fast confirmation is complementary to finality, with additional network and stake assumptions.
 
-## What is FCR?
+## Timing
 
-The Fast Confirmation Rule (FCR) is a consensus client feature that provides single-slot confirmation for Ethereum transactions. Instead of waiting for full finality via Casper FFG (~13 minutes / 2 epochs), FCR counts attestations within a single slot to deliver deterministic confirmation in approximately 13 seconds.
+The homepage uses 24 seconds as an illustrative headline. The production guide describes about 12–24 seconds in favorable conditions. Confirmation can take longer or stall. Compared with a 13-minute (780-second) finality baseline, 24 seconds is 32.5× faster and about 97% less waiting. This is not a guaranteed upper bound or faster finality. Post-Glamsterdam timing needs technical confirmation; no future fork is implied to be live.
 
-## Key Facts
+## Production guide
 
-- Confirmation time: ~13 seconds (single slot) vs ~13 minutes (finality)
-- Speed improvement: ~98% reduction in confirmation latency
-- Hard forks required: 0 — FCR is a client-side feature, not a protocol change
-- Adversarial threshold: <25% of total stake must be adversarial
-- Communication model: Requires network synchrony (attestations arrive within bound)
-- Failure behavior: Falls back to the last finalized block if assumptions break
-- No economic security (no slashing) — deterministic guarantee under network assumptions
+https://fastconfirm.it/docs/production
 
-## How It Works
+Draft based on PR #23 dated September 30, 2026; reconciliation with the current source is outstanding. The adversarial-stake section has an unresolved validator-sampling passage requiring Derek/Francesco review. Consult the formal paper for precise safety assumptions: https://arxiv.org/abs/2405.00549v4
 
-1. Enable the fast confirmation flag on your consensus client (e.g., `lighthouse bn --fast-confirmation-rule`)
-2. Query `eth_getBlockByNumber("safe")` via JSON-RPC
-3. The `safe` block tag returns the last fast-confirmed block
+## Adoption
 
-## Use Cases
+Verify client and RPC support and safe-tag semantics before use. Use multiple independent implementations/providers agreeing on the same block hash, monitor freshness, and define disagreement and finality fallback policies. Consider finality for large transfers and optional k-deep checks. Fast confirmation can stall, and safety assumption violations or bugs can cause reorgs; fallback does not undo an earlier false confirmation.
 
-- **Exchanges**: Credit deposits within seconds instead of minutes
-- **Cross-Chain Bridges**: Reduce capital lockup for cross-chain transfers
-- **L2s**: Confirm L1 deposits within seconds; automatic fallback to safe head
-- **RPC Providers**: The `safe` tag automatically returns fast-confirmed blocks
+## Use cases
 
-## Assumptions
-
-1. **Synchrony**: Attestations must arrive within the synchrony bound
-2. **Honest majority**: At least 75% of total stake must be honest and participating
+Exchanges, supported cross-chain bridges, L2s, RPC/infrastructure providers, asset issuers and solvers. Support depends on client, asset and route. Chainlink's September 28 CCIP 2.0 announcement describes FCR support when it launches, not verified user activation: https://chain.link/blog/introducing-ccip-2-0
 
 ## Contact
 
-- Email: fastconfirm@ethereum.org
-- Website: https://fastconfirm.it
-- Publisher: Ethereum Foundation
+fastconfirm@ethereum.org

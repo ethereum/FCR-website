@@ -31,3 +31,9 @@
   for = "/*.svg"
   [headers.values]
     Cache-Control = "public, max-age=86400"
+
+# Serve the canonical docs URL directly as a native multi-page build entry.
+[[redirects]]
+  from = "/docs/production"
+  to = "/docs/production/index.html"
+  status = 200
